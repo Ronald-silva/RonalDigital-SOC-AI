@@ -175,12 +175,41 @@ export function applyPreviewPolicy(
                 args && typeof args === 'object' && 'body' in args && typeof args.body === 'string'
                   ? args.body
                   : '';
-              const result = evaluateBeforeSend({
+              const baseContext = {
                 ...ctx,
                 ...liveContext?.(),
                 body,
                 semanticPromise: semanticClassifier ? await semanticClassifier(body) : null,
-              });
+              };
+
+              let result = evaluateBeforeSend(baseContext);
+
+              // No sandbox, a janela horária não deve impedir o usuário de ver
+              // a resposta que o agente produziria. Registramos o impedimento
+              // que existiria em produção e reavaliamos somente com a janela
+              // aberta, preservando todos os demais guardrails.
+              if (p.kind === 'sandbox' && result.veto?.code === 'outside_window') {
+                p.result.impediments.push({
+                  code: result.veto.code,
+                  message: result.veto.message,
+                });
+
+                result = evaluateBeforeSend({
+                  ...baseContext,
+                  pacing: {
+                    ...baseContext.pacing,
+                    resposta: true,
+                    knobs: {
+                      ...baseContext.pacing.knobs,
+                      windowStartHour: 0,
+                      windowEndHour: 24,
+                      respostaStartHour: 0,
+                      respostaEndHour: 24,
+                    },
+                  },
+                });
+              }
+
               if (result.veto) {
                 p.result.impediments.push({ code: result.veto.code, message: result.veto.message });
                 return {

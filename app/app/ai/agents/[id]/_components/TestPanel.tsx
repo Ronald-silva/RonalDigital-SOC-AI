@@ -184,7 +184,7 @@ export function TestPanel({ agent, draft, published, readOnly }: Props) {
         //
         // 120s é o teto do orçamento de passos do agente, não um chute
         // confortável: acima disso o problema é o agente, não a espera.
-        { timeoutMs: 120_000 },
+        { timeoutMs: 300_000 },
       );
       setResult(res.data);
       qc.invalidateQueries({ queryKey: agentRunsKey(agent.id) });
