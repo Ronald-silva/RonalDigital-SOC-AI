@@ -12,8 +12,11 @@ import { ProspectingError } from "@/lib/prospecting/provider";
 import { prospectingInputSchema } from "@/lib/prospecting/schema";
 import {
   activateCampaign,
+  adjustPace,
   configureCredential,
   createSearch,
+  descartarDesmarcadas,
+  selecionarNaFila,
   validateConfig,
   withProspectingLock,
   type Campaign,
@@ -128,6 +131,7 @@ export async function POST(req: NextRequest) {
     const pool = getRequestPool();
     const admin = createAdminClient();
     let result: unknown;
+    let auditMetadata: Record<string, unknown> = { operation: body.action };
     if (body.action === "configure") {
       await configureCredential(pool, admin, org, body.api_key);
       result = { configured: true };
@@ -144,6 +148,14 @@ export async function POST(req: NextRequest) {
       if (!changed.rows.length)
         throw new ProspectingError("Campanha em execução não encontrada.", 404);
       result = { paused: true };
+    } else if (body.action === "adjust_pace") {
+      const { previous, next } = await adjustPace(pool, org, body.id, {
+        daily_limit: body.daily_limit,
+        interval_minutes: body.interval_minutes,
+      });
+      result = next;
+      // O histórico precisa dizer DE QUANTO PARA QUANTO — só o nome da ação não diz.
+      auditMetadata = { operation: body.action, previous, next };
     } else if (body.action === "select") {
       result = await withProspectingLock(pool, org, async (db) => {
         const campaign = (
@@ -160,6 +172,21 @@ export async function POST(req: NextRequest) {
         );
         return { selected: body.selected, candidates_id: rows.map((r) => r.id) };
       });
+    } else if (body.action === "select_in_queue") {
+      const fila = await selecionarNaFila(pool, org, body.id, body.candidate_ids, body.selected);
+      result = fila;
+      // Quantas empresas de fato mudaram (o servidor ignora as que não podiam mudar).
+      auditMetadata = {
+        operation: body.action,
+        selected: body.selected,
+        changed: fila.changed_ids.length,
+      };
+    } else if (body.action === "discard_unselected") {
+      const descarte = await descartarDesmarcadas(pool, org, body.id);
+      result = descarte;
+      // O histórico precisa dizer QUANTAS linhas saíram: apagar é o único gesto desta rota
+      // que não tem volta, e "alguém excluiu" sem número não deixa conferir nada depois.
+      auditMetadata = { operation: body.action, discarded: descarte.discarded };
     } else {
       result = await withProspectingLock(pool, org, async (db) => {
         const c = (
@@ -194,7 +221,7 @@ export async function POST(req: NextRequest) {
       actorApiTokenId: auth.apiTokenId ?? null,
       resourceType: "prospecting",
       resourceId,
-      metadata: { operation: body.action },
+      metadata: auditMetadata,
       requestId,
     });
     return ok(result, { requestId, headers });

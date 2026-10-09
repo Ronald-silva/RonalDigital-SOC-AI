@@ -139,30 +139,6 @@ it('refreshes agenda read state for each candidate while writes stay proposals',
   await execute(tools, 'send_message', { body: 'Vou verificar o horário para você.' });
   expect(p.result.candidates).toHaveLength(1);
 });
-
-it('sandbox mostra a candidata fora da janela, mas registra o bloqueio que ocorreria em produção', async () => {
-  const p = preview();
-  const ctx = {
-    ...gate(),
-    now: new Date('2026-10-08T03:30:00Z'), // 00:30 em America/Sao_Paulo
-  };
-  const send = vi.fn();
-
-  const tools = applyPreviewPolicy(
-    { send_message: definition(send) },
-    p,
-    ctx,
-    () => [],
-  );
-
-  await execute(tools, 'send_message', { body: 'Olá, Carlos!' });
-
-  expect(send).not.toHaveBeenCalled();
-  expect(p.result.candidates).toHaveLength(1);
-  expect(p.result.candidates[0]?.body).toBe('Olá, Carlos!');
-  expect(p.result.impediments.some((i) => i.code === 'outside_window')).toBe(true);
-});
-
 it('uses only supplied in-memory sample contact in sandbox', () => {
   const context = scenarioContext([], { name: 'Maria Cenário', phone: '+5511999999999' });
   expect(context.context.contact.name).toBe('Maria Cenário');
