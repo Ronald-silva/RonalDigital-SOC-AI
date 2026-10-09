@@ -25,6 +25,17 @@ export interface UsagePayload {
     p50_latency_ms: number;
     p95_latency_ms: number;
     handoff_rate: number;
+    /**
+     * Quantas chamadas da janela ficaram com `cost_cents` NULO — modelo fora da
+     * tabela de preços (`lib/agent-engine/edge/llm/pricing.ts`).
+     *
+     * Existe porque `cost_cents` acima soma só o que tem preço, e `> 0` não
+     * distingue "gastou pouco" de "gastou e ninguém mediu". Sem este número a
+     * tela mostra um total honesto e INCOMPLETO sem nada dizer que falta parte —
+     * foi medido numa VPS real: 28 chamadas, todas nulas, tela em zero. Zero
+     * aqui é o caso normal, e é a única leitura que autoriza confiar no total.
+     */
+    chamadas_sem_preco: number;
   };
   series: {
     cost_cents: Array<{ day: string; value: number }>;
@@ -85,6 +96,7 @@ export function aggregateUsage(
   const byKind: Record<string, number> = {};
   let totalCost = 0;
   let totalTokens = 0;
+  let semPreco = 0;
   const allLatencies: number[] = [];
 
   for (const row of rows) {
@@ -92,6 +104,7 @@ export function aggregateUsage(
     const bucket = buckets.get(day);
     if (!bucket) continue; // outside range — skip defensively
     const cost = row.cost_cents ?? 0;
+    if (row.cost_cents === null) semPreco += 1;
     const tokens = tokensOf(row);
     const latency = row.latency_ms ?? 0;
 
@@ -159,6 +172,7 @@ export function aggregateUsage(
       p50_latency_ms: p50All,
       p95_latency_ms: p95All,
       handoff_rate: Number(overallRate.toFixed(4)),
+      chamadas_sem_preco: semPreco,
     },
     series: {
       cost_cents: costSeries,

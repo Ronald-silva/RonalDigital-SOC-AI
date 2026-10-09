@@ -32,6 +32,7 @@ import {
   versionPatchSchema,
 } from "@/lib/ai/agents/validation";
 import { publishAgentVersion } from "@/lib/ai/agents/publish";
+import { conferirControleDeGastos } from "@/lib/ai/agents/controle-de-gastos";
 import { escolherVersoesDaTela } from "@/lib/ai/agents/versoes-da-tela";
 import { VALID_TOOL_IDS } from "@/lib/mcp/tools";
 
@@ -400,6 +401,20 @@ export async function publishAgentAction(
   const invalid = tools.filter((t) => !valid.has(t));
   if (invalid.length > 0) {
     return { ok: false, error: "tool_id_invalid", details: { invalid } };
+  }
+
+  // CONTROLE DE GASTOS — a MESMA régua da rota (`publish/route.ts`), pela mesma
+  // função. Os dois caminhos de publicação humana passam por aqui; o `tool_ids`
+  // logo acima é a cópia dupla que já existe, e ela não se repete nesta régua.
+  // A mensagem fica na tela (`MENSAGEM_DA_RECUSA`); daqui sai só o CÓDIGO, que é
+  // o contrato que o teste cobra.
+  const gastos = await conferirControleDeGastos(admin, {
+    orgId: activeOrg.orgId,
+    agentId,
+    versionId,
+  });
+  if (!gastos.ok) {
+    return { ok: false, error: gastos.codigo, details: gastos.detalhes };
   }
 
   const result = await publishAgentVersion(admin, {

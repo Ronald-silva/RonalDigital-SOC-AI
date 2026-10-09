@@ -86,6 +86,51 @@ export const BLOQUEIO_TITULO = 'O limite de gasto com IA foi atingido';
  */
 export const HANDOFF_REASON_ORCAMENTO = 'orcamento_de_ia';
 
+/**
+ * ─── OS DOIS AVISOS DA FASE 1.1, e por que são AVISO e não recusa ───────────
+ *
+ * Decisão do dono do produto (08/10/2026): a exigência de controle de gastos
+ * vincula no ATO DE PUBLICAR (`lib/ai/agents/controle-de-gastos.ts`); no runtime
+ * ela só avisa. Os dois casos abaixo alcançam o que a publicação não alcança —
+ * o agente que JÁ estava no ar quando esta mudança entrou, e o que o onboarding
+ * publicou sozinho, sem ninguém ter sido perguntado nada.
+ *
+ * `kind = 'other'` com `ref_kind` próprio, e NÃO um kind novo: acrescentar valor
+ * a `agent_inbox_items_kind_check` é migration, e o precedente de aviso de custo
+ * desta casa já é `other` + `ref_kind` (`cache_hit_ratio`, em `../../obs/metrics.ts`).
+ * Uma régua de dedup a menos para manter, e zero schema.
+ *
+ * ⚠️ NENHUM dos dois pode reusar `kind = 'budget_warning'`. Aquele kind é lido
+ * por `avisadoNesteMes` (condição 7 de `decidirOrcamento`) como "esta organização
+ * já foi avisada do limiar neste mês". Abrir um `budget_warning` por AUSÊNCIA de
+ * teto satisfaria a condição 7 sem ninguém ter cruzado limiar nenhum — e a
+ * organização passaria a poder ser BLOQUEADA na primeira vez que o gasto atinge
+ * o teto, sem o aviso que a condição existe para garantir. O erro apontaria para
+ * o lado duro, que é o pior dos dois.
+ */
+export const REF_SEM_TETO = 'ai_budget_sem_teto_declarado';
+export const SEM_TETO_TITULO = 'A IA atende sozinha e esta empresa não declarou limite de gasto';
+export const SEM_TETO_CORPO =
+  'O agente está respondendo clientes em modo automático, e ninguém definiu quanto ' +
+  'esta empresa aceita gastar por mês com IA. Enquanto o limite não for declarado, ' +
+  'não há nada que interrompa o gasto se algo sair do esperado. ' +
+  'Defina o limite em Uso de IA › Orçamento. ' +
+  'Isto é um AVISO: nada foi interrompido, e a IA continua atendendo normalmente.';
+
+export const REF_MODELO_SEM_PRECO = 'ai_modelo_sem_preco';
+export const MODELO_SEM_PRECO_TITULO = 'Um modelo em uso não tem preço cadastrado — o gasto dele não é contado';
+export function corpoDoModeloSemPreco(modelo: string): string {
+  return (
+    `As chamadas do modelo "${modelo}" estão sendo gravadas com custo DESCONHECIDO, ` +
+    'porque esta versão do produto não tem o preço dele. O efeito não é só um número ' +
+    'faltando: o gasto do mês soma os custos conhecidos, então o que este modelo ' +
+    'consome não aparece na tela de Uso de IA e não conta para o limite — o limite ' +
+    'deixa de proteger enquanto ele estiver em uso. ' +
+    'Troque por um modelo com preço conhecido em Agente de IA, ou peça a atualização do produto. ' +
+    'Isto é um AVISO: nada foi interrompido.'
+  );
+}
+
 /** Escreve dólar, porque o número É dólar (`pricing.ts` calcula em USD). */
 function emDolares(cents: number): string {
   return `US$ ${(cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

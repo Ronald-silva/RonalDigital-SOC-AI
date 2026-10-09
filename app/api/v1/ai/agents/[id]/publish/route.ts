@@ -21,7 +21,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { publishSchema, PUBLISH_ERROR_CODES } from "@/lib/ai/agents/validation";
 import { VALID_TOOL_IDS } from "@/lib/mcp/tools";
 import { publishAgentVersion } from "@/lib/ai/agents/publish";
+import {
+  conferirControleDeGastos,
+  MENSAGEM_DA_RECUSA,
+} from "@/lib/ai/agents/controle-de-gastos";
 import { traduzir } from "@/lib/i18n/dicionario";
+import { logger } from "@/lib/logger";
 
 const VALID_TOOL_IDS_RUNTIME = new Set<string>(VALID_TOOL_IDS as readonly string[]);
 
@@ -82,6 +87,34 @@ export async function POST(req: NextRequest, ctx: Ctx): Promise<Response> {
     return fail("tool_id_invalid", t("tool_ids contém ids inexistentes no catálogo MCP."), 422, {
       requestId,
       details: { invalid },
+    });
+  }
+
+  // CONTROLE DE GASTOS — depois dos tool_ids e ANTES do flip atômico.
+  //
+  // Aqui, e não dentro de `publishAgentVersion`: aquela função é chamada também
+  // pelo onboarding (`first-publication.ts`), pelo preparo de prospecção e pela
+  // aplicação de proposta, que são caminhos de SISTEMA. Recusar lá faria uma
+  // instalação nova não conseguir terminar o wizard — o bloqueio inesperado que
+  // esta mudança existe para não causar. Quem é alcançado aqui é o ato HUMANO de
+  // publicar, nos dois lugares em que ele existe (esta rota e a server action).
+  const gastos = await conferirControleDeGastos(admin, {
+    orgId: activeOrg.orgId,
+    agentId: id,
+    versionId: parsed.data.version_id,
+  });
+  if (gastos.naoFoiPossivelConferir !== undefined) {
+    logger.warn("[ai.publish] controle de gastos não pôde ser conferido — a publicação SEGUE", {
+      request_id: requestId,
+      organization_id: activeOrg.orgId,
+      agent_id: id,
+      causa: gastos.naoFoiPossivelConferir,
+    });
+  }
+  if (!gastos.ok) {
+    return fail(gastos.codigo, t(MENSAGEM_DA_RECUSA[gastos.codigo]), 422, {
+      requestId,
+      details: gastos.detalhes,
     });
   }
 

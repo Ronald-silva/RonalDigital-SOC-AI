@@ -3621,6 +3621,9 @@ export const DICIONARIO: Traducoes = {
   "por mês. Abaixo disso não é orçamento de": { es: "por mes. Por debajo de eso no es presupuesto de" },
   "precisa de ferramentas": { es: "necesita herramientas" },
   "publicada — já vale para todos os agentes.": { es: "publicada — ya se aplica a todos los agentes." },
+  "chamadas usaram um modelo sem preço cadastrado e NÃO entram neste total nem no limite de gastos": {
+    es: "llamadas usaron un modelo sin precio registrado y NO entran en este total ni en el límite de gastos",
+  },
   "quanto mais alto, mais a IA precisou de ajuda": { es: "cuanto más alto, más ayuda necesitó la IA" },
   "resposta inesperada do servidor": { es: "respuesta inesperada del servidor" },
   "sem ferramentas": { es: "sin herramientas" },

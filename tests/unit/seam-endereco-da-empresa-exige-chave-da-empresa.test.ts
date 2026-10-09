@@ -36,6 +36,7 @@ import {
   normalizarErro,
   runModelCall,
 } from "@/lib/agent-engine/edge/llm/run-model-call";
+import { REF_MODELO_SEM_PRECO } from "@/lib/agent-engine/edge/llm/orcamento";
 
 const ORG = "11111111-1111-4111-8111-111111111111";
 const ENDERECO_DA_EMPRESA = "https://gateway.da-empresa.exemplo/v1";
@@ -165,8 +166,22 @@ async function chamar(opts: Parameters<typeof poolFalso>[0] & { agora?: Date }) 
   return { execucao, consultas, chamadas };
 }
 
+/**
+ * Os avisos DESTE assunto — o endereço próprio sem a chave da empresa.
+ *
+ * ⚠️ O filtro por `ref_kind` não é zelo: `run-model-call` abre outro aviso na
+ * Central quando o modelo da chamada não tem preço na tabela
+ * (`REF_MODELO_SEM_PRECO`, Fase 1.1 — o gasto dele não entra no teto), e o
+ * modelo deste arquivo é `acme/classificador-1`, de propósito um id de
+ * terceiro que a tabela não conhece e que os casos abaixo ASSERTAM. Sem o
+ * filtro, aquele vizinho aparecia nos controles que afirmam "nenhum aviso" e
+ * este arquivo reprovava por um aviso que não é assunto dele.
+ */
 const avisosNaCentral = (consultas: Consulta[]) =>
-  consultas.filter((c) => c.sql.includes("insert into agent_inbox_items"));
+  consultas.filter(
+    (c) =>
+      c.sql.includes("insert into agent_inbox_items") && !c.params.includes(REF_MODELO_SEM_PRECO),
+  );
 const falhasGravadas = (consultas: Consulta[]) =>
   consultas.filter((c) => c.sql.includes("insert into llm_calls") && c.sql.includes("'erro'"));
 

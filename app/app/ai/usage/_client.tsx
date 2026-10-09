@@ -92,6 +92,22 @@ export function UsageDashboardClient({ agents, initial }: Props) {
               // DÓLAR: esta tela mostrava o MESMO número em duas moedas — o card de
               // orçamento logo acima em US$ e este StatCard em R$, dois centímetros abaixo.
               value={formatCentsUSD(q.data.totals.cost_cents)}
+              /*
+                A RESSALVA É CONDICIONAL, e vive COLADA no número que ela
+                desmente. Chamada com modelo fora da tabela de preços grava
+                `cost_cents` nulo, e o total acima soma só o que tem preço: sem
+                esta linha o card mostra um valor honesto e INCOMPLETO sem nada
+                avisar, que é como uma VPS real exibiu zero com 28 chamadas
+                reais saindo. Card próprio diria "0" todo dia no caso normal —
+                e número que quase sempre é zero se aprende a ignorar.
+              */
+              {...(q.data.totals.chamadas_sem_preco > 0
+                ? {
+                    hint: `${q.data.totals.chamadas_sem_preco.toLocaleString("pt-BR")} ${t(
+                      "chamadas usaram um modelo sem preço cadastrado e NÃO entram neste total nem no limite de gastos",
+                    )}`,
+                  }
+                : {})}
             />
             <StatCard
               label={t("Atendimentos com IA")}

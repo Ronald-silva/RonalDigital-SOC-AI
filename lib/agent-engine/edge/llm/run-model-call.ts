@@ -35,6 +35,12 @@ import {
   normalizarModoDeOrcamento,
   LIMIAR_PADRAO_PCT,
   SQL_ORCAMENTO,
+  corpoDoModeloSemPreco,
+  MODELO_SEM_PRECO_TITULO,
+  REF_MODELO_SEM_PRECO,
+  REF_SEM_TETO,
+  SEM_TETO_CORPO,
+  SEM_TETO_TITULO,
   type ChaveDeOrcamento,
 } from './orcamento';
 import { costCents } from './pricing';
@@ -266,6 +272,69 @@ interface LinhaDoOrcamento {
 }
 
 /**
+ * ─── OS AVISOS DE CONTROLE DE GASTOS, e por que eles são ESTRANGULADOS ──────
+ *
+ * Os dois casos que a Fase 1.1 precisa tornar visíveis — operação automática sem
+ * teto declarado, e modelo sem preço — acontecem em TODA chamada enquanto não
+ * forem corrigidos. Abrir o item a cada chamada seria uma escrita por turno no
+ * caminho quente, e o `enforcement_mode = 'off'` existe hoje justamente para o
+ * gate VOLTAR antes de qualquer query (ver a nota de custo em `aplicarOrcamento`).
+ * Pôr um insert ali desfaria essa decisão.
+ *
+ * Então são DUAS camadas de dedup, e cada uma resolve o que a outra não resolve:
+ *
+ *   1. **Estrangulamento em memória** (este Map): no máximo uma tentativa por
+ *      chave por dia, POR PROCESSO. É o que mantém o caminho quente sem escrita.
+ *      Perde-se no restart, e isso é aceitável: o preço de um insert a mais
+ *      depois de um deploy é zero.
+ *   2. **Dedup no banco** (`insert ... where not exists`): enquanto o item está
+ *      ABERTO, nada é inserido. É o que impede N workers de abrirem N itens, e
+ *      é a mesma forma do aviso de cache hit (`../../obs/metrics.ts`).
+ *
+ * Falha de escrita NUNCA sobe: um aviso que não entrou não pode derrubar a
+ * chamada que ele estava tentando descrever.
+ */
+const ULTIMO_AVISO_DE_GASTO = new Map<string, number>();
+const INTERVALO_DO_AVISO_MS = 24 * 60 * 60 * 1000;
+
+async function avisarSobreControleDeGastos(d: {
+  db: pg.Pool;
+  organizationId: string;
+  refKind: string;
+  refId: string;
+  titulo: string;
+  corpo: string;
+  log?: Logger;
+}): Promise<void> {
+  const chave = `${d.organizationId}:${d.refKind}:${d.refId}`;
+  const agora = Date.now();
+  const ultimo = ULTIMO_AVISO_DE_GASTO.get(chave);
+  if (ultimo !== undefined && agora - ultimo < INTERVALO_DO_AVISO_MS) return;
+  ULTIMO_AVISO_DE_GASTO.set(chave, agora);
+
+  try {
+    await d.db.query(
+      `insert into agent_inbox_items (organization_id, kind, severity, title, body, ref_kind, ref_id)
+       select $1, 'other', 'warn', $2, $3, $4, $5
+        where not exists (
+          select 1 from agent_inbox_items
+           where organization_id = $1 and ref_kind = $4 and ref_id = $5 and status = 'open'
+        )`,
+      [d.organizationId, d.titulo, d.corpo, d.refKind, d.refId],
+    );
+  } catch (err) {
+    // O aviso é informação; a chamada que ele descreve já aconteceu ou vai
+    // acontecer de qualquer jeito. Mas a causa vai nomeada para o log — aviso
+    // que não entra em silêncio é o defeito que este trabalho persegue.
+    d.log?.warn('llm: aviso de controle de gastos não pôde ser aberto', {
+      organization_id: d.organizationId,
+      ref_kind: d.refKind,
+      ...normalizarErro(err),
+    });
+  }
+}
+
+/**
  * O GATE — lê o estado, deixa `decidirOrcamento` decidir, e executa o veredito.
  *
  * ═══ POR QUE ELE NÃO DECIDE NADA POR CONTA PRÓPRIA ═══
@@ -315,6 +384,30 @@ async function aplicarOrcamento(d: {
     return;
   }
   if (d.orcamentoDaConfig.modo === 'off' || d.chave === 'off') {
+    // ⚠️ O ATALHO SEGUE SENDO ATALHO: nada de query aqui. O aviso abaixo é
+    // estrangulado em memória (uma tentativa por organização por dia, por
+    // processo), então o caminho quente volta sem tocar no banco em 100% das
+    // chamadas menos a primeira do dia.
+    //
+    // `agent_turn` e só ele: é o purpose do turno que RESPONDE um cliente em
+    // modo automático. `agent_preview` é rascunho assistido e sandbox — modo em
+    // que uma pessoa aprova cada mensagem, e que a régua de publicação dispensa
+    // de propósito (ver `lib/ai/agents/controle-de-gastos.ts`). Avisar ali seria
+    // cobrar teto de quem o produto não cobra.
+    //
+    // A chave de emergência (`chave === 'off'`) NÃO avisa: quem a puxou às 2h da
+    // manhã sabe o que desligou, e um alerta novo no meio do incidente é ruído.
+    if (d.orcamentoDaConfig.modo === 'off' && d.chave !== 'off' && d.purpose === 'agent_turn') {
+      await avisarSobreControleDeGastos({
+        db: d.db,
+        organizationId: d.organizationId,
+        refKind: REF_SEM_TETO,
+        refId: d.organizationId,
+        titulo: SEM_TETO_TITULO,
+        corpo: SEM_TETO_CORPO,
+        ...(d.log ? { log: d.log } : {}),
+      });
+    }
     return;
   }
 
@@ -759,6 +852,31 @@ export async function runModelCall(db: pg.Pool, cfg: LlmEdgeConfig, input: RunMo
   // 1.25× a entrada em 5m e 2× em 1h, e supor a doutrina superfaturaria 60% da
   // parcela de cache write em quem usa o knob.
   const cost = costCents(model, usage, cfg.cacheTtl ?? '1h');
+
+  // CUSTO DESCONHECIDO NÃO PODE SER SILENCIOSO.
+  //
+  // `cost === null` significa que o modelo não está na tabela de preços. O
+  // número continua nulo na coluna — inventar um seria pior, e é a decisão que
+  // `pricing.ts` já documenta. O que esta chamada acrescenta é o AVISO, porque a
+  // consequência não é só um número faltando: `fn_gasto_de_ia_do_mes` soma
+  // `cost_cents`, e SUM IGNORA NULL. Enquanto este modelo estiver em uso, o
+  // gasto do mês não o enxerga e o teto não o alcança — o limite deixa de
+  // proteger sem nada na tela dizer isso.
+  //
+  // Estrangulado por organização E modelo: trocar de modelo é informação nova e
+  // merece aviso novo. Não bloqueia (decisão do dono do produto: no runtime só
+  // avisa; quem recusa é a publicação).
+  if (cost === null) {
+    await avisarSobreControleDeGastos({
+      db,
+      organizationId: input.tenantId,
+      refKind: REF_MODELO_SEM_PRECO,
+      refId: model,
+      titulo: MODELO_SEM_PRECO_TITULO,
+      corpo: corpoDoModeloSemPreco(model),
+      ...(deps.log ? { log: deps.log } : {}),
+    });
+  }
 
   const { rows } = await db.query<{ id: string }>(
     `insert into llm_calls

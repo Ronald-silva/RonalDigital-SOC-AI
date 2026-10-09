@@ -403,6 +403,25 @@ test.describe("followup — jornada completa (Task 8.3)", () => {
       // que a janela de risco realmente abre (pointer active + agent
       // published+enabled apontando pra ele) — dali em diante, TUDO até o fim
       // do teste tem que estar dentro deste try.
+      // ---- TETO DE GASTOS, ANTES DE PUBLICAR ----
+      // Desde a Fase 1.1 o produto RECUSA (422 `budget_nao_declarado`) publicar
+      // um agente que atende sozinho sem limite mensal declarado — e
+      // `ai_agents.operation_mode` nasce `'automatic'`, então o agente criado
+      // acima cai na régua. Declarar aqui é o que uma pessoa faria em
+      // Uso de IA › Orçamento antes de pôr a IA para atender.
+      //
+      // `avisar` de propósito: a régua cobra DECLARAÇÃO, não severidade, e o
+      // degrau que PARA a IA mudaria o que esta spec mede. Quem vigia a régua
+      // em si são os casos de `tests/unit/controle-de-gastos-*.test.ts`.
+      expect(
+        (
+          await page.request.patch("/api/v1/ai/budget", {
+            data: { monthly_limit_cents: 5000, enforcement_mode: "avisar" },
+          })
+        ).status(),
+        "sem teto declarado a publicação logo abaixo recusa com 422",
+      ).toBe(200);
+
       const publishAgentRes = await page.request.post(`/api/v1/ai/agents/${agentId}/publish`, {
         data: { version_id: versionId },
       });

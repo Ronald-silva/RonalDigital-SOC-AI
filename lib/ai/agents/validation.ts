@@ -312,7 +312,13 @@ export type PublishErrorCode =
   | "channel_session_not_found"
   | "channel_session_offline"
   | "model_not_found"
-  | "tool_id_invalid";
+  | "tool_id_invalid"
+  // Controle de gastos (ver `./controle-de-gastos.ts`). Entram aqui, e não
+  // num conjunto próprio, porque a régua é a MESMA dos irmãos acima: o que
+  // impede a publicação é 422 com código estável, nunca 500.
+  | "modelo_sem_preco"
+  | "budget_nao_declarado"
+  | "budget_abaixo_do_piso";
 
 export const PUBLISH_ERROR_CODES: ReadonlySet<string> = new Set<PublishErrorCode>([
   "agent_not_found",
@@ -329,4 +335,7 @@ export const PUBLISH_ERROR_CODES: ReadonlySet<string> = new Set<PublishErrorCode
   "channel_session_offline",
   "model_not_found",
   "tool_id_invalid",
+  "modelo_sem_preco",
+  "budget_nao_declarado",
+  "budget_abaixo_do_piso",
 ]);
