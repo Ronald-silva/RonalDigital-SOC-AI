@@ -169,10 +169,20 @@ const versionShapeSchema = z
     cost_budget_cents: z.number().int().min(1).max(10000).default(50),
     history_message_window: z.number().int().min(0).max(200).default(20),
     history_token_window: z.number().int().min(0).max(50000).default(8000),
+    // A palavra SOLTA `atendente` saiu do default em 11/10/2026. Ela era testada por
+    // substring crua (`matchesHandoffKeyword`), sem fronteira de palavra e sem tempo
+    // verbal, então "já conversei com o atendente, podemos continuar?" abria passagem
+    // nova e o cliente recebia o aviso de transferência em vez da resposta — medido na
+    // conversa `cb141462`. O pedido legítimo não depende mais dela: `falar com (o|um)
+    // atendente`, com advérbio e artigo, é reconhecido pelo detector determinístico
+    // (`HUMAN_HANDOFF_PATTERNS` em lib/agent-engine/agent/human-handoff.ts), que exige
+    // o verbo de contato e ignora o trecho em que o contato já aconteceu.
+    // Só o DEFAULT muda: quem já tem a palavra gravada continua com ela até tirá-la em
+    // IA › Agentes — este arquivo não reescreve configuração de ninguém.
     handoff_keywords: z
       .array(z.string().trim().min(1).max(60))
       .max(20)
-      .default(["falar com humano", "atendente", "pessoa real"]),
+      .default(["falar com humano", "pessoa real"]),
     handoff_tool_enabled: z.boolean().default(true),
     // Passar para uma pessoa por ASSUNTO JURÍDICO — irmão da linha acima, com
     // o MESMO molde: booleano com default LIGADO (#2097, #2156). O default é

@@ -38,6 +38,30 @@ export interface NotaInterna {
   quando: string;
 }
 
+/**
+ * O que a pessoa disse AO CLIENTE pelo canal, durante esta passagem.
+ *
+ * É a quarta superfície, e a que faltava. As três primeiras (`agent_case_events`,
+ * `conversation_notes`, `agent_cases`) só existem quando quem atende abre chamado ou
+ * escreve nota interna — e a operação comum não faz nenhum dos dois: a pessoa assume a
+ * conversa no Inbox e simplesmente responde. Medido na conversa `cb141462` em
+ * 11/10/2026: 0 chamados, 0 notas, 1 mensagem humana ENTREGUE — e a devolução ao
+ * automático auditou `houve_atendimento_humano: false`, pulou o checkpoint de retomada
+ * e deixou o agente cego para o que a pessoa já tinha combinado. O cliente então
+ * perguntou "você lembra o que ficou pendente?" e a IA não tinha como lembrar.
+ *
+ * Não resolve nome de autor de propósito: `messages` guarda `sent_by_user_id`, e trocar
+ * id por nome pediria uma junção a mais para enfeitar uma frase. O que importa para a
+ * continuidade é O QUE foi dito ao cliente, não quem digitou — o id fica aqui para quem
+ * for programar em cima.
+ */
+export interface FalaAoCliente {
+  /** `messages.sent_by_user_id` — quem enviou, sem resolver o nome. */
+  autorUserId: string | null;
+  texto: string;
+  quando: string;
+}
+
 export interface ChamadoResumido {
   id: string;
   titulo: string;
@@ -51,6 +75,8 @@ export interface ContinuidadeHumana {
   houveAtendimentoHumano: boolean;
   decisoes: DecisaoHumana[];
   notas: NotaInterna[];
+  /** O que a pessoa disse ao cliente DENTRO desta passagem — ver `FalaAoCliente`. */
+  falasAoCliente: FalaAoCliente[];
   chamados: ChamadoResumido[];
   /**
    * O que ficou PENDENTE com o cliente — só existe quando a pessoa pediu algo a
@@ -76,6 +102,7 @@ export const CONTINUIDADE_VAZIA: ContinuidadeHumana = {
   houveAtendimentoHumano: false,
   decisoes: [],
   notas: [],
+  falasAoCliente: [],
   chamados: [],
   pendenciaComOCliente: null,
   resumo: "",
@@ -101,6 +128,35 @@ interface NoteRow {
   created_by_name: string | null;
   created_at: string;
 }
+
+interface MensagemHumanaRow {
+  body: string | null;
+  sent_by_user_id: string | null;
+  created_at: string;
+}
+
+/**
+ * Os `messages.status` que provam que a mensagem SAIU para o cliente.
+ *
+ * `failed` fica FORA, e esta é a linha mais importante desta leitura. Na mesma conversa
+ * `cb141462` havia uma mensagem humana `failed` com `error_message = 'fetch failed'`,
+ * que nunca chegou ao WhatsApp (nenhum `POST /api/sendText` no provedor naquele minuto,
+ * e `external_id` vazio). Contá-la faria a IA retomar afirmando ao cliente que a equipe
+ * já lhe respondeu algo que ele nunca viu — pior que o silêncio que este módulo conserta.
+ *
+ * `queued` e `sending` também ficam fora: são estados em trânsito, e o dono deles é a
+ * cadeia de envio. Quando virarem `sent`, a próxima leitura os vê.
+ */
+const STATUS_QUE_SAIU = ["sent", "delivered", "read"] as const;
+
+/**
+ * Teto de caracteres por fala do cliente. As outras superfícies não truncam porque nota
+ * interna e decisão de chamado são curtas por natureza; mensagem de WhatsApp vai a 4096
+ * caracteres, e dez delas estourariam o orçamento de prompt que `LIMITE_POR_SUPERFICIE`
+ * existe para proteger. O corte preserva o começo, que é onde a pessoa diz o que
+ * combinou, e marca o corte para o modelo não tratar o trecho como frase inteira.
+ */
+const TETO_DA_FALA = 400;
 
 /**
  * Lê o rastro humano de UMA conversa.
@@ -149,6 +205,8 @@ export async function lerContinuidadeHumana(
     .map((n) => ({ autor: n.created_by_name, texto: textoLegivelDeMencao(n.body), quando: n.created_at }))
     .reverse();
 
+  const falasAoCliente = await lerFalasDaPassagem(supabase, organizationId, conversationId);
+
   const decisoes: DecisaoHumana[] = eventos.map((e) => ({
     chamadoId: e.case_id,
     chamadoTitulo: tituloPorChamado.get(e.case_id) ?? "chamado",
@@ -171,18 +229,86 @@ export async function lerContinuidadeHumana(
   const pendenciaComOCliente =
     ultimoPedido && ultimoPedido.texto !== "" ? ultimoPedido.texto : null;
 
-  const houveAtendimentoHumano = decisoes.length > 0 || notas.length > 0;
+  const houveAtendimentoHumano =
+    decisoes.length > 0 || notas.length > 0 || falasAoCliente.length > 0;
 
   return {
     houveAtendimentoHumano,
     decisoes,
     notas,
+    falasAoCliente,
     chamados,
     pendenciaComOCliente,
     resumo: houveAtendimentoHumano
-      ? montarResumo({ decisoes, notas, pendenciaComOCliente })
+      ? montarResumo({ decisoes, notas, falasAoCliente, pendenciaComOCliente })
       : "",
   };
+}
+
+/**
+ * As mensagens que a PESSOA mandou ao cliente DENTRO desta passagem.
+ *
+ * ## A janela, e por que ela é a idempotência
+ *
+ * O recorte é `created_at >= conversations.last_handoff_at`, e ele não está aqui por
+ * economia de linhas lidas — está aqui porque é o que impede duplicação:
+ *
+ *  - SEM janela, qualquer mensagem humana da história inteira da conversa marcaria
+ *    `houveAtendimentoHumano = true` para sempre. Como `gravarCheckpointDeRetomada`
+ *    ACRESCENTA ao `rolling_summary` em vez de substituir (e isso é deliberado lá),
+ *    toda devolução futura empilharia de novo o mesmo relato.
+ *  - COM janela, a idempotência vem do código que já existe: `lerContinuidadeHumana` é
+ *    chamada no passo (0) da devolução, ANTES de qualquer escrita, e o passo (2) zera
+ *    `last_handoff_at`. Uma segunda devolução — duplo clique, ou a automática correndo
+ *    com a manual — lê janela FECHADA, devolve lista vazia e não grava checkpoint
+ *    nenhum. Isso importa porque `jaEstavaComOAgente` (`retomada.ts`) é calculado e
+ *    NUNCA curto-circuita: não existe guarda de reentrada hoje.
+ *
+ * `last_handoff_at` nulo ⇒ não há passagem aberta ⇒ lista vazia. Nunca o contrário:
+ * cair para "a conversa toda" na ausência da marca é exatamente o caso sem janela.
+ */
+async function lerFalasDaPassagem(
+  supabase: SupabaseClient,
+  organizationId: string,
+  conversationId: string,
+): Promise<FalaAoCliente[]> {
+  const { data: convData } = await supabase
+    .from("conversations")
+    .select("last_handoff_at")
+    .eq("organization_id", organizationId)
+    .eq("id", conversationId)
+    .maybeSingle();
+  const desde = (convData as { last_handoff_at: string | null } | null)?.last_handoff_at ?? null;
+  if (desde === null) return [];
+
+  const { data } = await supabase
+    .from("messages")
+    .select("body, sent_by_user_id, created_at")
+    .eq("organization_id", organizationId)
+    .eq("conversation_id", conversationId)
+    .eq("direction", "outbound")
+    // `sent_via` distingue a pessoa da IA na MESMA coluna de saída: a resposta do agente
+    // grava `ai` (e `metadata.ai_actor_id`), a da pessoa grava `user` + `sent_by_user_id`.
+    .eq("sent_via", "user")
+    .in("status", STATUS_QUE_SAIU as unknown as string[])
+    .gte("created_at", desde)
+    .order("created_at", { ascending: true })
+    .limit(LIMITE_POR_SUPERFICIE);
+
+  return ((data ?? []) as MensagemHumanaRow[])
+    .map((m) => ({
+      autorUserId: m.sent_by_user_id,
+      texto: (m.body ?? "").trim(),
+      quando: m.created_at,
+    }))
+    // Mensagem sem corpo é mídia: ela SAIU, mas não há texto a repassar ao modelo, e uma
+    // linha vazia no resumo só gastaria prompt. A mídia em si continua na conversa, que é
+    // onde o modelo já a lê.
+    .filter((f) => f.texto !== "")
+    .map((f) => ({
+      ...f,
+      texto: f.texto.length > TETO_DA_FALA ? `${f.texto.slice(0, TETO_DA_FALA)}…` : f.texto,
+    }));
 }
 
 /**
@@ -193,6 +319,8 @@ export async function lerContinuidadeHumana(
 export function montarResumo(input: {
   decisoes: DecisaoHumana[];
   notas: NotaInterna[];
+  /** Opcional para não quebrar quem monta o resumo sem as falas (o campo nasceu depois). */
+  falasAoCliente?: FalaAoCliente[];
   pendenciaComOCliente: string | null;
 }): string {
   const linhas: string[] = [
@@ -209,6 +337,13 @@ export function montarResumo(input: {
   for (const n of input.notas) {
     const autor = n.autor ?? "a equipe";
     linhas.push(`- ${autor} anotou internamente: ${n.texto}`);
+  }
+
+  // As falas vêm DEPOIS das decisões e notas, e com rótulo próprio: o cliente LEU estas,
+  // e não leu as outras duas. Confundir as duas coisas num prompt é o que faz o agente
+  // citar nota interna para o cliente.
+  for (const f of input.falasAoCliente ?? []) {
+    linhas.push(`- a equipe JÁ DISSE ao cliente, por mensagem: ${f.texto}`);
   }
 
   if (input.pendenciaComOCliente !== null) {

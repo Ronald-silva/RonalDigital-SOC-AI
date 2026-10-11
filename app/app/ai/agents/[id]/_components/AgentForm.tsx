@@ -297,11 +297,10 @@ export function buildState(args: {
     cost_budget_cents: version?.cost_budget_cents ?? 50,
     history_message_window: version?.history_message_window ?? 20,
     history_token_window: version?.history_token_window ?? 8_000,
-    handoff_keywords: version?.handoff_keywords ?? [
-      "falar com humano",
-      "atendente",
-      "pessoa real",
-    ],
+    // Sem a palavra solta `atendente` — ver o porquê em `lib/ai/agents/validation.ts`
+    // (o default do servidor) e em `HandoffKeywordsInput`. Agente que JÁ tem a palavra
+    // gravada cai no `version?.handoff_keywords` e segue com ela: só o default mudou.
+    handoff_keywords: version?.handoff_keywords ?? ["falar com humano", "pessoa real"],
     handoff_tool_enabled: version?.handoff_tool_enabled ?? true,
     handoff_legal_enabled: version?.handoff_legal_enabled ?? true,
     proposal_ai_draft_enabled: version?.proposal_ai_draft_enabled ?? true,

@@ -5,7 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/hooks/i18n/useT";
 
-const DEFAULTS = ["falar com humano", "atendente", "pessoa real"];
+/**
+ * As sugestões de um clique. A palavra SOLTA `atendente` saiu em 11/10/2026: ela é
+ * testada por substring crua, então sugeri-la num clique era oferecer o falso positivo
+ * de "já conversei com o atendente" pronto. Quem pede atendente continua sendo ouvido
+ * pelo detector determinístico, que exige o verbo de contato. Razão completa em
+ * `lib/ai/agents/validation.ts`.
+ */
+const DEFAULTS = ["falar com humano", "pessoa real"];
 
 interface Props {
   value: string[];
