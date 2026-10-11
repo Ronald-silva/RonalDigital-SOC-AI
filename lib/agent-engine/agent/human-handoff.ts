@@ -73,21 +73,103 @@ function normalize(text: string): string {
 }
 
 /**
+ * O ALVO HUMANO de quem PEDE para falar (padrão 1), no singular E no plural.
+ *
+ * O plural é escrito alvo por alvo, e não com um `s?` geral, porque três destes não
+ * pluralizam com `s`: `consultores`, `vendedores`, `responsaveis`. Um `s?` solto daria
+ * meia cobertura — pegaria "atendentes" e deixaria "consultores" de fora —, e meia
+ * cobertura num detector determinístico é pior que nenhuma: ela esconde o buraco.
+ */
+const ALVO_HUMANO =
+  'atendentes?|humanos?|pessoas?|gente|consultor(?:es)?|vendedor(?:es)?|representantes?|responsa(?:vel|veis)';
+
+/**
+ * O alvo de quem pede para SER PASSADO (padrão 2) — lista DIFERENTE da de cima, e de
+ * propósito: aqui entram `setor` e `comercial` ("me passa pro comercial" é pedido de
+ * transferência), e não entram `consultor`/`vendedor`/`representante`/`responsavel`.
+ * As duas listas são mantidas separadas porque era assim antes deste conserto, e
+ * unificá-las alargaria a detecção num ponto que ninguém mediu.
+ */
+const ALVO_DA_TRANSFERENCIA = 'atendentes?|humanos?|pessoas?|gente|setor(?:es)?|comercial';
+
+/**
+ * Artigo opcional antes do alvo. `um[a]?` já estava aqui; o DEFINIDO faltava, e é o
+ * que o cliente escreve — "falar com O atendente" era tão comum quanto "com UM
+ * atendente" e só a segunda forma era reconhecida. `[oa]s?` cobre o plural
+ * ("com OS atendentes"), que é o par do plural dos alvos acima.
+ */
+const ARTIGO_OPCIONAL = '(?:um[a]?|uns|umas|[oa]s?|algum[a]?|alguns|algumas)\\s+';
+
+/**
+ * Advérbio opcional entre o verbo e o `com`: "falar DIRETAMENTE com um atendente".
+ * Qualquer palavra terminada em `-mente` serve — enumerar advérbio é lista que
+ * envelhece, e o sufixo é a classe inteira em português.
+ */
+const ADVERBIO_OPCIONAL = '(?:\\s+\\w+mente)?';
+
+/**
  * Padrões PT-BR CONSERVADORES de pedido explícito de atendimento humano (evita falso
  * positivo: exige o verbo de contato + o alvo humano, ou expressões inequívocas). Rodam
  * sobre o texto normalizado (sem acento).
+ *
+ * ## Por que o advérbio e o artigo definido entraram (11/10/2026)
+ *
+ * Porque sem eles a frase que o cliente de verdade escreveu não era reconhecida, e a
+ * organização consertou isso do único jeito que a tela oferece: pôs a palavra SOLTA
+ * `atendente` em `ai_agent_versions.handoff_keywords`, que o motor testa por substring
+ * crua (`matchesHandoffKeyword`). O remendo funcionou e trouxe o defeito que ele não
+ * podia evitar — "Já conversei com o atendente humano. Podemos continuar?" virou
+ * passagem nova, com o aviso fixo de transferência no lugar da resposta.
+ *
+ * Medido na conversa `cb141462`: o pedido real das 18:34 ("preciso falar DIRETAMENTE
+ * com um atendente humano") era `false` aqui — o advérbio entre `falar` e `com` quebrava
+ * o `\s+com` — e só a palavra solta o segurava. Então a ordem do conserto importa: este
+ * padrão fecha a lacuna PRIMEIRO, e só depois a palavra solta pode sair da configuração.
+ * Invertido, o pedido legítimo para de ser ouvido.
  */
 const HUMAN_HANDOFF_PATTERNS: readonly RegExp[] = [
-  /\b(?:falar|conversar)\s+com\s+(?:um[a]?\s+)?(?:atendente|humano|pessoa|gente|consultor|vendedor|representante|responsavel)\b/,
-  /\bme\s+(?:passa|passe|transfere|transfira|encaminha|encaminhe|manda|mande)\s+(?:pra|para|pro)\s+(?:um[a]?\s+)?(?:atendente|humano|pessoa|gente|setor|comercial)\b/,
+  new RegExp(`\\b(?:falar|conversar)${ADVERBIO_OPCIONAL}\\s+com\\s+(?:${ARTIGO_OPCIONAL})?(?:${ALVO_HUMANO})\\b`),
+  new RegExp(
+    `\\bme\\s+(?:passa|passe|transfere|transfira|encaminha|encaminhe|manda|mande)` +
+      `${ADVERBIO_OPCIONAL}\\s+(?:pra|para|pro)\\s+(?:${ARTIGO_OPCIONAL})?(?:${ALVO_DA_TRANSFERENCIA})\\b`,
+  ),
   /\batendimento\s+humano\b/,
   /\b(?:atendente|humano|pessoa)\s+de\s+verdade\b/,
 ];
 
+/**
+ * Trechos em que o contato com a pessoa JÁ ACONTECEU — eles são APAGADOS antes de os
+ * padrões acima rodarem.
+ *
+ * ## Por que apagar o trecho, e não vetar a mensagem
+ *
+ * Porque as duas coisas aparecem na MESMA mensagem: "já falei com o atendente e não
+ * resolveu, quero falar com uma pessoa" é um pedido legítimo, e um veto por mensagem o
+ * calaria. Apagar só o trecho retrospectivo deixa o pedido do resto da frase intacto —
+ * a operação é estritamente redutora de falso positivo e nunca cria um negativo novo
+ * em cláusula independente.
+ *
+ * ## Por que a lista é só de AUXILIAR + INFINITIVO
+ *
+ * Porque o passado simples já é imune por construção: os padrões exigem `falar`/`conversar`
+ * (infinitivo) colado ao `com`, e "falei com", "conversei com", "falamos com" não casam —
+ * é por isso que "Já conversei com o atendente" era `false` mesmo ANTES deste bloco. O
+ * único buraco é o infinitivo governado por auxiliar retrospectivo ("acabei DE FALAR com
+ * o atendente"), que o artigo definido recém-aceito passaria a reconhecer. Esta lista
+ * fecha exatamente esse buraco, e nada além dele.
+ */
+const RETROSPECTIVA = new RegExp(
+  `\\b(?:acabei|acabo|acabamos|acabou|terminei|terminamos|consegui|conseguimos|depois|apos)\\s+` +
+    `(?:de\\s+)?(?:falar|conversar)${ADVERBIO_OPCIONAL}\\s+com\\s+(?:${ARTIGO_OPCIONAL})?(?:${ALVO_HUMANO})\\b`,
+  'g',
+);
+
 /** True se a mensagem do lead é um pedido explícito de atendimento humano (determinístico). */
 export function detectHumanHandoffRequest(message: string): boolean {
   if (message.trim() === '') return false;
-  const normalized = normalize(message);
+  // O espaço no lugar do trecho apagado é deliberado: sem ele, "acabei de falar com o
+  // atendente" e um "quero falar com uma pessoa" grudados viravam uma palavra só.
+  const normalized = normalize(message).replace(RETROSPECTIVA, ' ');
   return HUMAN_HANDOFF_PATTERNS.some((re) => re.test(normalized));
 }
 
