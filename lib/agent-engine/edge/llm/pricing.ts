@@ -131,6 +131,18 @@ const USD_PER_MTOK: Record<string, Preco> = {
   'gemini-2.5-flash-lite': { input: 0.1, output: 0.4, cacheRead: 0.01, cacheWrite5m: 0.1, cacheWrite1h: 0.1 },
   'gemini-2.0-flash': { input: 0.1, output: 0.4, cacheRead: 0.1, cacheWrite5m: 0.1, cacheWrite1h: 0.1 },
 
+  // DeepSeek V4 Pro — tarifa de pico de https://api-docs.deepseek.com/quick_start/pricing/,
+  // consultada em 13/10/2026. Pico: 01:00–04:00 e 06:00–10:00 UTC, seg–sex;
+  // demais horários são off-peak: entrada 0.66, saída 1.98 e cache read 0.022 USD/MTok.
+  // Não há tarifa separada para escrita de cache; ela vale como entrada/cache miss.
+  'deepseek-v4-pro': {
+    input: 1.32,
+    output: 3.96,
+    cacheRead: 0.044,
+    cacheWrite5m: 1.32,
+    cacheWrite1h: 1.32,
+  },
+
   // Jev (TypeSafe AI), a versão FIXADA em lib/ai/decisao/cliente.ts. Fonte:
   // docs.typesafe.ai/models.md, conferida em 23/09/2026 — "Charged per input
   // token. Output tokens are free." A API devolve output_tokens > 0 mesmo assim:
