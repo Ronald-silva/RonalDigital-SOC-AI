@@ -101,6 +101,7 @@ describe("costCents — cada tarifa isolada, por modelo", () => {
     ["gemini-2.5-flash", 30, 250, 3, 30, 30],
     ["gemini-2.5-flash-lite", 10, 40, 1, 10, 10],
     ["gemini-2.0-flash", 10, 40, 10, 10, 10],
+    ["deepseek-v4-pro", 132, 396, 4.4, 132, 132],
   ])("%s", (model, cIn, cOut, cLeitura, cGrav5m, cGrav1h) => {
     expect(entrada(model)).toBeCloseTo(cIn, 6);
     expect(saida(model)).toBeCloseTo(cOut, 6);
