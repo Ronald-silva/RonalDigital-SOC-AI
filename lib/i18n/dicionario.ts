@@ -37,6 +37,14 @@ import type { Idioma } from "./idiomas";
 type Traducoes = Record<string, Partial<Record<Exclude<Idioma, "pt-BR">, string>>>;
 
 export const DICIONARIO: Traducoes = {
+  "Canal para enviar os lembretes": { es: "Canal para enviar los recordatorios" },
+  "Automático — conversa da reserva ou único canal disponível": { es: "Automático — conversación de la reserva o único canal disponible" },
+  "Canal configurado indisponível — escolha outro": { es: "Canal configurado no disponible — elige otro" },
+  "O canal escolhido vale para todas as reservas deste tipo, inclusive as criadas manualmente. Se ele não puder enviar, a equipe recebe um aviso; o sistema não troca de número sozinho.": { es: "El canal elegido se aplica a todas las reservas de este tipo, incluidas las creadas manualmente. Si no puede enviar, el equipo recibe un aviso; el sistema no cambia de número por su cuenta." },
+  "Não foi possível carregar os canais. A escolha guardada será preservada; tente novamente.": { es: "No se pudieron cargar los canales. Se conservará la elección guardada; inténtalo de nuevo." },
+  "Canal sem nome": { es: "Canal sin nombre" },
+  "Não foi possível consultar o canal do lembrete.": { es: "No se pudo consultar el canal del recordatorio." },
+  "Escolha um canal de mensagem não arquivado desta organização.": { es: "Elige un canal de mensajes no archivado de esta organización." },
   "Conectar a assinatura do ChatGPT": { es: "Conectar la suscripción de ChatGPT" },
   "Cada empresa conecta a própria conta do ChatGPT. Abra o link e entre com a conta que tem a assinatura. No fim, o navegador vai para http://127.0.0.1:1455/auth/callback, que pode não abrir — é esperado. Copie esse endereço inteiro, da barra do navegador, e cole aqui.": {
     es: "Cada empresa conecta su propia cuenta de ChatGPT. Abre el enlace e inicia sesión con la cuenta que tiene la suscripción. Al final, el navegador irá a http://127.0.0.1:1455/auth/callback, que quizá no se abra — es normal. Copia la dirección completa de la barra del navegador y pégala aquí.",
@@ -64,9 +72,13 @@ export const DICIONARIO: Traducoes = {
   "reúne em um só lugar as conversas com os clientes, o funil de vendas, a agenda de atendimentos e agentes de inteligência artificial que respondem, qualificam o interesse e passam a conversa para uma pessoa quando é preciso.": { es: "reúne en un solo lugar las conversaciones con los clientes, el embudo de ventas, la agenda de atención y agentes de inteligencia artificial que responden, califican el interés y pasan la conversación a una persona cuando hace falta." },
   "Quando a empresa conecta o Google Agenda, o": { es: "Cuando la empresa conecta Google Calendar, el" },
   "mostra a ocupação da agenda e cria, altera e cancela os agendamentos pedidos pela própria pessoa. Quando conecta o Google Ads, devolve ao anúncio as vendas que ele trouxe. O uso dos dados do Google está descrito na": { es: "muestra la ocupación de la agenda y crea, modifica y cancela las citas pedidas por la propia persona. Cuando conecta Google Ads, devuelve al anuncio las ventas que trajo. El uso de los datos de Google está descrito en la" },
-  "9. Dados do Google (Agenda e Google Ads)": { es: "9. Datos de Google (Agenda y Google Ads)" },
+  "9. Dados do Google (Agenda, Meet e Google Ads)": { es: "9. Datos de Google (Agenda, Meet y Google Ads)" },
   "Quando uma pessoa autorizada da organização conecta uma conta Google a este sistema, os dados recebidos do Google são usados somente para a função que ela pediu:": { es: "Cuando una persona autorizada de la organización conecta una cuenta de Google a este sistema, los datos recibidos de Google se usan únicamente para la función que pidió:" },
   "Google Agenda:": { es: "Google Calendar:" },
+  "Google Meet:": { es: "Google Meet:" },
+  "criar espaços de reunião do Google Meet quando a organização liga o Meet com acesso aberto; só o link gerado é devolvido pelo Google e guardado no servidor do operador para o convite.": {
+    es: "crear espacios de reunión de Google Meet cuando la organización activa Meet con acceso abierto; solo el enlace generado lo devuelve Google y se guarda en el servidor del operador para la invitación.",
+  },
   "mostrar a ocupação da agenda, criar, alterar e cancelar os agendamentos feitos pelo próprio usuário e evitar choque de horários. O sistema guarda no servidor do operador o título e o horário dos eventos para calcular a ocupação, e o cálculo de horários livres usa apenas o início, o fim e a situação deles. O sistema não lê e-mails.": { es: "mostrar la ocupación de la agenda, crear, modificar y cancelar las citas hechas por el propio usuario y evitar choques de horario. El sistema guarda en el servidor del operador el título y el horario de los eventos para calcular la ocupación, y el cálculo de horarios libres usa solo el inicio, el fin y el estado de ellos. El sistema no lee correos electrónicos." },
   "Google Ads:": { es: "Google Ads:" },
   "enviar ao Google Ads as vendas que um anúncio trouxe, para que ele aprenda com elas, criar e listar ações de conversão e ler as métricas das campanhas da própria conta de anúncios.": { es: "enviar a Google Ads las ventas que trajo un anuncio, para que aprenda de ellas, crear y listar acciones de conversión y leer las métricas de las campañas de la propia cuenta de anuncios." },
@@ -1201,6 +1213,7 @@ export const DICIONARIO: Traducoes = {
   "Abrir negócio": { es: "Abrir negocio" },
   "Abrir acompanhamento": { es: "Abrir seguimiento" },
   "Revisar conexão": { es: "Revisar conexión" },
+  "Configurar canal do lembrete": { es: "Configurar canal del recordatorio" },
   "Revisar agente": { es: "Revisar agente" },
   "Testar ou revisar resposta": { es: "Probar o revisar respuesta" },
   "Abrir base de conhecimento": { es: "Abrir base de conocimiento" },
@@ -5337,6 +5350,9 @@ export const DICIONARIO: Traducoes = {
   "Deixe em branco para voltar à cor padrão do sistema.": {
     es: "Déjalo en blanco para volver al color predeterminado del sistema.",
   },
+  "Cor da marca no tema escuro (opcional)": { es: "Color de la marca en el tema oscuro (opcional)" },
+  "Cor da sua marca no tema escuro (opcional)": { es: "Color de tu marca en el tema oscuro (opcional)" },
+  "Deixe em branco para os dois modos usarem a cor acima.": { es: "Déjalo en blanco para que ambos modos usen el color de arriba." },
   "A partir da sua cor o sistema monta esta escala e escolhe, dentro dela, o tom que vai nos botões:": {
     es: "A partir de tu color el sistema arma esta escala y elige, dentro de ella, el tono que va en los botones:",
   },
@@ -5421,6 +5437,9 @@ export const DICIONARIO: Traducoes = {
   "Sua cor é um tom neutro (cinza, preto ou branco), e uma cor assim não destaca nada na tela. Os botões seguem com a cor padrão do sistema, e a sua fica reservada ao logo.": {
     es: "Tu color es un tono neutro (gris, negro o blanco), y un color así no resalta nada en la pantalla. Los botones siguen con el color predeterminado del sistema, y el tuyo queda reservado al logo.",
   },
+  "A cor do modo escuro é um tom neutro (cinza, preto ou branco), e uma cor assim não destaca nada na tela. No modo escuro, os botões seguem com a cor padrão do sistema.": {
+    es: "El color del modo oscuro es un tono neutro (gris, negro o blanco), y un color así no resalta nada en la pantalla. En el modo oscuro, los botones siguen con el color predeterminado del sistema.",
+  },
   "Não existe tom desta cor que deixe todos os elementos legíveis. Alguns detalhes — como o contorno que marca o campo em foco — ficam difíceis de enxergar.": {
     es: "Ningún tono de este color deja todos los elementos legibles. Algunos detalles, como el contorno que marca el campo enfocado, quedan difíciles de ver.",
   },
@@ -5492,6 +5511,7 @@ export const DICIONARIO: Traducoes = {
   Automações: { es: "Automatizaciones" },
   Atividade: { es: "Actividad" },
   Funil: { es: "Embudo" },
+  "Todos os funis": { es: "Todos los embudos" },
   "Escolha o funil": { es: "Elige el embudo" },
   "Escolha o funil primeiro": { es: "Elige primero el embudo" },
   desconectado: { es: "desconectado" },
@@ -5681,6 +5701,34 @@ export const DICIONARIO: Traducoes = {
   "Ver no Kanban": { es: "Ver en el Kanban" },
   "Últimos recebimentos": { es: "Últimos recibidos" },
   "Ainda não chegou nada por aqui.": { es: "Todavía no ha llegado nada por aquí." },
+  // ─── CARTEIRA DO CLIENTE (#2591) ──────────────────────────────────────────
+  // Título da tarefa interna para o vendedor dono (`lib/carteira/aviso-ao-dono.ts`).
+  // `{{contact.name}}` é o placeholder de `interpolarTitulo` — a tradução tem
+  // de mantê-lo, ou o nome do cliente sai do título em espanhol.
+  "Cliente da sua carteira falou com outro vendedor: {{contact.name}}": {
+    es: "El cliente de tu cartera habló con otro vendedor: {{contact.name}}",
+  },
+  // Motivo do 403 quando o negócio novo cairia no cliente de outro vendedor
+  // (rota de criação, modo "Só os seus").
+  "Este cliente pertence à carteira de outro vendedor. O negócio novo nasce com o dono da carteira.": {
+    es: "Este cliente pertenece a la cartera de otro vendedor. El negocio nuevo nace con el dueño de la cartera.",
+  },
+  // Respostas da porta dedicada `PATCH /contacts/[id]/carteira`.
+  "Só gerente e administrador podem mudar a carteira do cliente.": {
+    es: "Solo gerente y administrador pueden cambiar la cartera del cliente.",
+  },
+  "O dono precisa ser membro ativo desta empresa, com papel de atendente, gerente ou administrador. Quem só lê, e quem saiu da equipe, não é dono de carteira.": {
+    es: "El dueño debe ser miembro activo de esta empresa, con rol de agente, gerente o administrador. Quien solo lee, y quien salió del equipo, no es dueño de cartera.",
+  },
+  "Contato não encontrado nesta empresa.": {
+    es: "Contacto no encontrado en esta empresa.",
+  },
+  "A origem da carteira não é válida.": {
+    es: "El origen de la cartera no es válido.",
+  },
+  "Não foi possível salvar a carteira do cliente.": {
+    es: "No fue posible guardar la cartera del cliente.",
+  },
   "assinatura inválida": { es: "firma inválida" },
   // Assinatura HMAC da fonte de captação, na tela de detalhe da fonte.
   "Assinatura (HMAC)": { es: "Firma (HMAC)" },
@@ -6028,6 +6076,20 @@ export const DICIONARIO: Traducoes = {
   "Enviar aos domingos": { es: "Enviar los domingos" },
   "Ligado por padrão: quem escreve no domingo espera resposta no domingo. Desligue se você faz prospecção ativa e prefere não incomodar no fim de semana.": {
     es: "Activado por defecto: quien escribe un domingo espera respuesta el domingo. Desactívalo si haces prospección activa y prefieres no molestar el fin de semana.",
+  },
+  "Disparos em massa e mensagens que retomam conversa parada só saem nesta janela. A prospecção usa estas horas nos dias próprios abaixo. Fora da janela, o envio fica agendado para a próxima abertura — você vê o motivo na conversa.": {
+    es: "Los envíos masivos y los mensajes que retoman una conversación detenida solo salen dentro de esta ventana. La prospección usa estas horas en sus propios días de abajo. Fuera de la ventana, el envío queda programado para la próxima apertura — ves el motivo en la conversación.",
+  },
+  "Dias da prospecção": { es: "Días de prospección" },
+  "Prospecção no dia {dia}": { es: "Prospección el día {dia}" },
+  "A primeira abordagem da prospecção só sai nestes dias, dentro da janela de disparo acima. Responder a quem escreveu segue a regra própria — desligar o domingo aqui não cala a resposta de domingo.": {
+    es: "El primer acercamiento de la prospección solo sale en estos días, dentro de la ventana de envíos de arriba. Responder a quien escribió sigue su propia regla — apagar el domingo aquí no silencia la respuesta del domingo.",
+  },
+  "Marque pelo menos um dia: sem dia marcado a prospecção não aborda ninguém.": {
+    es: "Marca al menos un día: sin día marcado, la prospección no contacta a nadie.",
+  },
+  "Ligado por padrão: quem escreve no domingo espera resposta no domingo. Desligar cala a resposta e os disparos em massa no domingo — a prospecção segue os dias próprios acima.": {
+    es: "Activado por defecto: quien escribe el domingo espera respuesta el domingo. Apagarlo silencia la respuesta y los envíos masivos del domingo — la prospección sigue sus propios días de arriba.",
   },
   "Ritmo entre envios (segundos)": { es: "Ritmo entre envíos (segundos)" },
   "Intervalo mínimo entre envios em segundos": {
@@ -6447,6 +6509,7 @@ export const DICIONARIO: Traducoes = {
   "La Paz (Bolívia)": { es: "La Paz (Bolivia)" },
   "Lima (Peru)": { es: "Lima (Perú)" },
   "Bogotá (Colômbia)": { es: "Bogotá (Colombia)" },
+  "Quito e Guayaquil (Equador)": { es: "Quito y Guayaquil (Ecuador)" },
   "Cidade do México (México)": { es: "Ciudad de México (México)" },
   "São Paulo (Brasil)": { es: "São Paulo (Brasil)" },
   "Manaus (Brasil)": { es: "Manaus (Brasil)" },
@@ -8861,6 +8924,7 @@ export const DICIONARIO: Traducoes = {
   "Nenhum membro ativo.": { es: "No hay miembros activos." },
   "Membro": { es: "Miembro" },
   "Papel de": { es: "Rol de" },
+  Papel: { es: "Rol" },
   "Aceito": { es: "Aceptado" },
   "Revogar acesso": { es: "Revocar acceso" },
   "você": { es: "tú" },
@@ -8915,6 +8979,7 @@ export const DICIONARIO: Traducoes = {
   "Criar funil": { es: "Crear embudo" },
   "Criar meu primeiro funil": { es: "Crear mi primer embudo" },
   "Novo funil": { es: "Nuevo embudo" },
+  "Trocar de funil": { es: "Cambiar de embudo" },
   "Subir": { es: "Subir" },
   "na lista": { es: "en la lista" },
   "Descer": { es: "Bajar" },
@@ -9392,6 +9457,9 @@ export const DICIONARIO: Traducoes = {
   "Email inválido. Confira o campo.": { es: "Correo inválido. Revisa el campo." },
   "Não foi possível enviar o e-mail. Tente novamente.": {
     es: "No se pudo enviar el correo. Intenta de nuevo.",
+  },
+  "A recuperação de senha não está disponível nesta instalação: sem SMTP configurado não sai e-mail nenhum. Contate o administrador para configurar em /admin/email.": {
+    es: "La recuperación de contraseña no está disponible en esta instalación: sin SMTP configurado no sale ningún correo. Contacta al administrador para configurarlo en /admin/email.",
   },
   "Verifique seu e-mail": { es: "Revisa tu correo" },
   "Se existir uma conta com esse e-mail, enviamos um link para redefinir a senha.": {
@@ -11337,6 +11405,17 @@ export const DICIONARIO: Traducoes = {
   "Calendário": { es: "Calendario" },
   "Não foi possível carregar as tarefas.": { es: "No se pudieron cargar las tareas." },
   "Nova tarefa": { es: "Nueva tarea" },
+  "Ninguém": { es: "Nadie" },
+  "Membro sem nome": { es: "Miembro sin nombre" },
+  "Fora da equipe": { es: "Fuera del equipo" },
+  "O responsável escolhido não faz parte da equipe.": { es: "El responsable elegido no forma parte del equipo." },
+  "aberta": { es: "abierta" },
+  "abertas": { es: "abiertas" },
+  "atrasada": { es: "atrasada" },
+  "atrasadas": { es: "atrasadas" },
+  "tarefa aberta": { es: "tarea abierta" },
+  "tarefas abertas": { es: "tareas abiertas" },
+  "Nenhuma tarefa neste negócio. Anote o próximo passo combinado, com prazo e responsável.": { es: "Ninguna tarea en este negocio. Anota el próximo paso acordado, con plazo y responsable." },
   "Editar tarefa": { es: "Editar tarea" },
   "Atrasadas": { es: "Atrasadas" },
   "Esta semana": { es: "Esta semana" },
@@ -12873,6 +12952,7 @@ export const DICIONARIO: Traducoes = {
   "nas listas e nos filtros:": { es: "en las listas y en los filtros:" },
   "Sem cor": { es: "Sin color" },
   "Prévia:": { es: "Vista previa:" },
+  "Confira a etiqueta e a cor.": { es: "Revise la etiqueta y el color." },
   "Cor da etiqueta atualizada.": { es: "Color de la etiqueta actualizado." },
   Amarelo: { es: "Amarillo" },
   Âmbar: { es: "Ámbar" },
@@ -13519,6 +13599,29 @@ export const DICIONARIO: Traducoes = {
   // salvar essa mudança agora."), reaproveitadas de propósito: mesma situação,
   // mesma frase. Só a do papel é nova, porque aqui o piso é gerente.
   "Agenda dos colegas": { es: "Agenda de los colegas" },
+  // "Google Meet com acesso aberto" (issue #2063, migration 0648): a opção e
+  // o AVISO DE RISCO, que fica encostada nela na mesma tela. A irmã ao lado é
+  // a "Agenda dos colegas" — mesma página, mesmo piso, mesmo formato de frase.
+  "Google Meet com acesso aberto": { es: "Google Meet con acceso abierto" },
+  "O Meet da reunião nasce com o acesso aberto": {
+    es: "La reunión de Meet nace con el acceso abierto",
+  },
+  "Com isto ligado, quando um compromisso ganha Meet o espaço já nasce aberto — qualquer pessoa com o link entra sem pedir para participar. Desligado, o Meet continua pedindo: é o comportamento de sempre.":
+    {
+      es: "Con esta opción activada, cuando una cita tiene Meet el espacio nace abierto: cualquier persona con el enlace entra sin pedir para unirse. Desactivado, Meet sigue pidiendo permiso: es el comportamiento de siempre.",
+    },
+  "⚠ Com o Meet aberto, quem tiver o link da reunião entra sozinho, sem que ninguém o admita. O link é a porta: não o publique onde circula livremente.":
+    {
+      es: "⚠ Con Meet abierto, quien tenga el enlace de la reunión entra solo, sin que nadie lo admita. El enlace es la puerta: no lo publique donde circula libremente.",
+    },
+  "No self-host, quem conecta o Google usa o próprio app OAuth: ligue a Meet API do Google Cloud e adicione o escopo meetings.space.created na tela de consentimento do seu projeto — sem isso, o Google recusa a criação do espaço aberto e o link sai comum.":
+    {
+      es: "En autoalojamiento, quien conecta Google usa su propia app OAuth: activa la Meet API de Google Cloud y agrega el ámbito meetings.space.created en la pantalla de consentimiento de tu proyecto; sin eso, Google rechaza la creación del espacio abierto y el enlace sale común.",
+    },
+  "Se a agenda do Google já estava conectada, a opção só passa a valer depois de reconectá-la: é na reconexão que o Google concede a permissão de criar o Meet aberto.":
+    {
+      es: "Si la agenda de Google ya estaba conectada, la opción solo empieza a valer después de reconectarla: es en la reconexión donde Google concede el permiso de crear el Meet abierto.",
+    },
   "Atendentes podem mexer na agenda dos colegas": {
     es: "Los asesores pueden modificar la agenda de sus colegas",
   },
@@ -14641,6 +14744,14 @@ export const DICIONARIO: Traducoes = {
   "A IA monta a proposta pelos modelos da empresa e o PDF sai pelo WhatsApp.": { es: "La IA arma la propuesta con las plantillas de la empresa y el PDF sale por WhatsApp." },
   "Cadastro de empresas por CNPJ, das pessoas que decidem nelas e importação de planilha.": { es: "Registro de empresas por CNPJ, de las personas que deciden en ellas e importación de planillas." },
   "Contratos de honorários com parcelas e o controle do que já foi pago.": { es: "Contratos de honorarios con cuotas y el control de lo que ya se pagó." },
+  // #1907 item 4 — a linha do módulo `financeiro` em `MODULOS_OPCIONAIS`
+  // (`lib/recursos-opcionais/catalogo.ts:124`). Enquanto faltava, o módulo
+  // entrava na lista nova pelo TEXTO_DO_MODULO sem nenhuma linha aqui.
+  // ("Comandas", o nome, já tem chave própria neste dicionário.)
+  "A comanda do atendimento: itens, forma de pagamento, comissões e fidelidade.": { es: "La orden de servicio de la atención: ítems, forma de pago, comisiones y fidelidad." },
+  "A comanda do atendimento: itens, forma de pagamento, comissões e fidelidade. O caixa continua no sistema mesmo sem este módulo. Toda instalação anterior a esta versão continua com Comandas ligada.": {
+    es: "La orden de servicio de la atención: ítems, forma de pago, comisiones y fidelidad. La caja sigue en el sistema aun sin este módulo. Toda instalación anterior a esta versión sigue con Órdenes de servicio activado.",
+  },
   "Decide o que acontece quando uma empresa passa do teto de gasto de IA.": { es: "Decide qué pasa cuando una empresa supera el tope de gasto de IA." },
   "Recusa a entrega de mensagem do WhatsApp que não vier assinada.": { es: "Rechaza la entrega de mensajes de WhatsApp que no lleguen firmados." },
   "Acrescenta o texto de divulgação à primeira mensagem, ou bloqueia o envio sem ele.": { es: "Agrega el texto de divulgación al primer mensaje, o bloquea el envío sin él." },
@@ -14731,6 +14842,11 @@ export const DICIONARIO: Traducoes = {
   "Padrão: varia": { es: "Por defecto: varía" },
   "Desligado por quem administra o servidor": { es: "Desactivado por quien administra el servidor" },
   "Recursos opcionais": { es: "Recursos opcionales" },
+  "Ligado, cada empresa ainda precisa ligar o módulo de proposta comercial nas configurações dela — o caminho aparece abaixo. A IA levanta o que o cliente precisa, monta a proposta pelos modelos da empresa e o PDF sai pelo WhatsApp. Desligado, nenhuma empresa vê a tela, o menu nem as ferramentas do agente.": { es: "Activado, cada empresa todavía necesita activar el módulo de propuesta comercial en su configuración — la ruta aparece abajo. La IA levanta lo que el cliente necesita, arma la propuesta con las plantillas de la empresa y el PDF sale por WhatsApp. Desactivado, ninguna empresa ve la pantalla, el menú ni las herramientas del agente." },
+  "Não cria porta no menu do CRM: ele libera um painel em": { es: "No crea entrada en el menú del CRM: habilita un panel en" },
+  "Aparece no menu em:": { es: "Aparece en el menú en:" },
+  "Ao ligar, aparece no menu em:": { es: "Al activar, aparece en el menú en:" },
+  "Não cria porta no menu do CRM: a tela é Cobrança, aqui no Admin.": { es: "No crea entrada en el menú del CRM: la pantalla es Cobranza, aquí en Admin." },
   "Tudo o que se liga e desliga, num lugar só. Cada recurso continua sendo ligado na tela dele: o botão Ajustar leva até lá.": { es: "Todo lo que se activa y desactiva, en un solo lugar. Cada recurso se sigue activando en su pantalla: el botón Ajustar te lleva allí." },
   "Módulos desta instalação": { es: "Módulos de esta instalación" },
   "Quem administra o servidor decide se eles existem aqui. Desligado, peça a essa pessoa.": { es: "Quien administra el servidor decide si existen aquí. Si está desactivado, pídeselo a esa persona." },
@@ -14880,6 +14996,21 @@ export const DICIONARIO: Traducoes = {
   "Excluir tira essas empresas da lista. Em outra busca, elas podem aparecer de novo como novas.": { es: "Eliminar quita estas empresas de la lista. En otra búsqueda pueden aparecer de nuevo como nuevas." },
   "Empresas desmarcadas excluídas.": { es: "Empresas desmarcadas eliminadas." },
   "Esta campanha já criou o contato e o negócio dessas empresas ao iniciar. Desmarcar só impede o envio: elas continuam no funil.": { es: "Esta campaña ya creó el contacto y el negocio de estas empresas al iniciar. Desmarcar solo impide el envío: siguen en el embudo." },
+  // Exportação da conversa em PDF (#2229)
+  "Celular": { es: "Móvil" },
+  "Mensagem apagada pelo autor.": { es: "Mensaje eliminado por el autor." },
+  "(editada)": { es: "(editada)" },
+  "Histórico da conversa": { es: "Historial de la conversación" },
+  "Aberta em": { es: "Abierta el" },
+  "Exportado por": { es: "Exportado por" },
+  "Atenção: esta conversa ultrapassa o limite de mensagens por arquivo — só as mais recentes entram neste histórico.": { es: "Atención: esta conversación supera el límite de mensajes por archivo; solo las más recientes entran en este historial." },
+  "recebida": { es: "recibida" },
+  "enviada": { es: "enviada" },
+  "Não foi possível gerar o PDF desta conversa.": { es: "No se pudo generar el PDF de esta conversación." },
+  "{quem} em {quando}": { es: "{quem} el {quando}" },
+  "página {atual} de {total}": { es: "página {atual} de {total}" },
+  "Muitas exportações seguidas. Tente em um minuto.": { es: "Demasiadas exportaciones seguidas. Inténtelo en un minuto." },
+  "Erro ao ler o contato.": { es: "Error al leer el contacto." },
   // ─── RELATÓRIOS: A ABA "POR ETIQUETA" (#1891) ───
   "Por etiqueta": { es: "Por etiqueta" },
   "Abertas": { es: "Abiertas" },
@@ -14992,7 +15123,6 @@ export const DICIONARIO: Traducoes = {
   "{n} avisos do provedor sem empresa correspondente nos últimos 90 dias.": { es: "{n} avisos del proveedor sin empresa correspondiente en los últimos 90 días." },
   "Provedor de pagamento": { es: "Proveedor de pago" },
   "Chave conectada:": { es: "Clave conectada:" },
-  "Asaas (em breve)": { es: "Asaas (próximamente)" },
   "Chave secreta": { es: "Clave secreta" },
   "Na Stripe: Desenvolvedores › Chaves de API. Comece pela chave de teste; troque pela de produção quando a compra de teste der certo.": { es: "En Stripe: Desarrolladores › Claves de API. Empieza con la clave de prueba; cámbiala por la de producción cuando la compra de prueba funcione." },
   "{n} empresa assinou em modo de teste. Ao publicar, ela volta para o teste grátis e precisa assinar de novo com um cartão de verdade.": { es: "{n} empresa se suscribió en modo de prueba. Al publicar, vuelve a la prueba gratis y debe suscribirse de nuevo con una tarjeta real." },
@@ -15097,6 +15227,52 @@ export const DICIONARIO: Traducoes = {
   "Outra renovação desta conta está em curso (ou o recurso está desligado). Aguarde alguns segundos e tente de novo.": { es: "Otra renovación de esta cuenta está en curso (o el recurso está desactivado). Espera unos segundos e intenta de nuevo." },
   "A OpenAI recusou a renovação do login. Gere o link de novo e conecte a conta outra vez.": { es: "OpenAI rechazó la renovación del inicio de sesión. Genera el enlace de nuevo y conecta la cuenta otra vez." },
   "Esta credencial guarda o login por assinatura da empresa, não uma chave de API. Use Conectar ou Desconectar na tela de Credenciais.": { es: "Esta credencial guarda el inicio de sesión por suscripción de la empresa, no una clave de API. Usa Conectar o Desconectar en la pantalla de Credenciales." },
+  // ─── cobrança: Asaas na configuração (PR 3b) ───
+  "A chave que deixa o sistema criar assinaturas e ler pagamentos na sua conta Asaas. Comece pela do sandbox, que começa com $aact_hmlg_.": { es: "La clave que permite al sistema crear suscripciones y leer pagos en tu cuenta de Asaas. Empieza con la del sandbox, que empieza con $aact_hmlg_." },
+  "Token dos avisos de pagamento do Asaas": { es: "Token de los avisos de pago de Asaas" },
+  "Confere que um aviso de pagamento veio mesmo do Asaas. É criado quando você conecta a chave; se o Asaas pedir o cadastro manual do aviso, a tela mostra o token uma única vez.": { es: "Comprueba que un aviso de pago vino realmente de Asaas. Se crea cuando conectas la clave; si Asaas pide registrar el aviso a mano, la pantalla muestra el token una sola vez." },
+  // ─── cobrança: documento de quem paga (PR 3b) ───
+  "CPF ou CNPJ de quem paga": { es: "CPF o CNPJ de quien paga" },
+  "Vai direto para o Asaas, que emite a cobrança neste documento; não fica guardado neste sistema. Confira antes de assinar: para trocar depois, fale com quem administra o sistema.": { es: "Va directo a Asaas, que emite el cobro con este documento; no queda guardado en este sistema. Revísalo antes de suscribirte: para cambiarlo después, habla con quien administra el sistema." },
+  "Confira o CPF ou CNPJ: os dígitos não batem.": { es: "Revisa el CPF o CNPJ: los dígitos no coinciden." },
+  "Informe o CPF ou CNPJ de quem paga.": { es: "Informa el CPF o CNPJ de quien paga." },
+  "O provedor de pagamento não aceitou este CPF ou CNPJ. Confira o número ou informe outro documento.": { es: "El proveedor de pago no aceptó este CPF o CNPJ. Revisa el número o informa otro documento." },
+  "Regularize o pagamento antes de trocar de plano.": { es: "Regulariza el pago antes de cambiar de plan." },
+  "A mensalidade de agora ainda não foi paga. Pague em \"Pagar agora\" e troque de plano depois que o pagamento for confirmado (Pix: minutos; boleto: até 1 dia útil).": { es: "La mensualidad actual aún no está pagada. Paga en \"Pagar ahora\" y cambia de plan después de que se confirme el pago (Pix: minutos; boleto: hasta 1 día hábil)." },
+  "Sua fatura está pronta. Pague por Pix, boleto ou cartão.": { es: "Tu factura está lista. Paga con Pix, boleto o tarjeta." },
+  "Abrir a fatura": { es: "Abrir la factura" },
+  "A fatura abre no Asaas, numa nova aba. Depois de pagar, volte aqui e clique em Já paguei: Pix confirma em minutos; boleto, em até 1 dia útil.": { es: "La factura se abre en Asaas, en una pestaña nueva. Después de pagar, vuelve aquí y haz clic en Ya pagué: Pix se confirma en minutos; boleto, en hasta 1 día hábil." },
+  "Adiantar a próxima mensalidade": { es: "Adelantar la próxima mensualidad" },
+  // ─── cobrança: Conexão com o Asaas (PR 3b) ───
+  "cobra o cartão sozinho todo mês e aceita boleto, mas não tem Pix.": { es: "cobra la tarjeta sola cada mes y acepta boleto, pero no tiene Pix." },
+  "todo mês o cliente recebe a cobrança e paga por Pix, boleto ou cartão: o jeito que o brasileiro paga. Pede o CPF ou CNPJ. Recomendado se seus clientes estão no Brasil.": { es: "cada mes el cliente recibe el cobro y paga con Pix, boleto o tarjeta: como paga el brasileño. Pide el CPF o CNPJ. Recomendado si tus clientes están en Brasil." },
+  "Conectado. Falta um passo: cadastre o aviso no Asaas (veja abaixo).": { es: "Conectado. Falta un paso: registra el aviso en Asaas (mira abajo)." },
+  "No Asaas: menu Integrações › Chaves de API. Comece pela conta de sandbox do Asaas; troque pela chave de produção quando a compra de teste der certo.": { es: "En Asaas: menú Integraciones › Claves de API. Empieza con la cuenta de sandbox de Asaas; cámbiala por la clave de producción cuando la compra de prueba funcione." },
+  "O Asaas só avisa pagamentos num endereço https público (ex.: https://crm.example.com). Configure o domínio do sistema com HTTPS e volte aqui.": { es: "Asaas solo avisa pagos en una dirección https pública (ej.: https://crm.example.com). Configura el dominio del sistema con HTTPS y vuelve aquí." },
+  "Falta um passo: cadastre o aviso de pagamento no Asaas": { es: "Falta un paso: registra el aviso de pago en Asaas" },
+  "O Asaas não deixou o sistema cadastrar o aviso sozinho. No Asaas, abra Integrações › Webhooks. Se já existir um aviso com o endereço abaixo, edite-o e troque só o token; se não, clique em Adicionar e preencha assim:": { es: "Asaas no dejó que el sistema registrara el aviso solo. En Asaas, abre Integraciones › Webhooks. Si ya existe un aviso con la dirección de abajo, edítalo y cambia solo el token; si no, haz clic en Agregar y complétalo así:" },
+  "Nome: Cobrança do sistema": { es: "Nombre: Cobrança do sistema" },
+  "E-mail: o seu (o Asaas avisa por ele se os avisos pararem)": { es: "Correo: el tuyo (Asaas te avisa por él si los avisos se detienen)" },
+  "Versão da API: v3": { es: "Versión de la API: v3" },
+  "Webhook ativado: Sim": { es: "Webhook activado: Sí" },
+  "Fila de sincronização ativada: Sim": { es: "Cola de sincronización activada: Sí" },
+  "Tipo de envio: Sequencial": { es: "Tipo de envío: Secuencial" },
+  "URL do aviso": { es: "URL del aviso" },
+  "Token de autenticação": { es: "Token de autenticación" },
+  "Eventos: marque estes, um por um": { es: "Eventos: marca estos, uno por uno" },
+  "Copiar URL": { es: "Copiar URL" },
+  "Copiar token": { es: "Copiar token" },
+  "O token aparece só agora: se sair desta tela sem copiá-lo, conecte de novo para gerar outro.": { es: "El token aparece solo ahora: si sales de esta pantalla sin copiarlo, conecta de nuevo para generar otro." },
+  "Quando o primeiro aviso chegar, o passo fica marcado na Visão geral.": { es: "Cuando llegue el primer aviso, el paso queda marcado en la Visión general." },
+  "Pronto, já cadastrei": { es: "Listo, ya lo registré" },
+  "Não consegui copiar. Selecione o texto e copie à mão.": { es: "No pude copiar. Selecciona el texto y cópialo a mano." },
+  // ─── cobrança: checklist do Asaas (PR 3b) ───
+  "Ele chega sozinho quando alguém assina ou paga. Se, ao conectar, o sistema pediu para cadastrar o aviso à mão no Asaas, confira lá a URL e o token (perdeu o token? Conecte de novo para gerar outro). A compra de teste do passo seguinte dispara o primeiro aviso.": { es: "Llega solo cuando alguien se suscribe o paga. Si, al conectar, el sistema pidió registrar el aviso a mano en Asaas, revisa allí la URL y el token (¿perdiste el token? Conecta de nuevo para generar otro). La compra de prueba del paso siguiente dispara el primer aviso." },
+  "Crie uma empresa de teste com outro e-mail seu (ex.: voce+teste@example.com), abra o convite numa janela anônima, clique em Assinar em Plano e cobrança informando um CPF válido e, no painel do sandbox do Asaas, confirme o recebimento da cobrança.": { es: "Crea una empresa de prueba con otro correo tuyo (ej.: voce+teste@example.com), abre la invitación en una ventana de incógnito, haz clic en Suscribirse en Plan y facturación informando un CPF válido y, en el panel del sandbox de Asaas, confirma la recepción del cobro." },
+  "Quando a compra de teste der certo, cole em Conexão a chave de produção do Asaas (começa com $aact_prod_). Até lá, clientes reais NÃO conseguem pagar.": { es: "Cuando la compra de prueba funcione, pega en Conexión la clave de producción de Asaas (empieza con $aact_prod_). Hasta entonces, los clientes reales NO pueden pagar." },
+  "Se você usa esta conta do Asaas para outras vendas, estes avisos são delas e podem ser ignorados.": { es: "Si usas esta cuenta de Asaas para otras ventas, estos avisos son de ellas y puedes ignorarlos." },
+  "{n} aviso do Asaas recusado nas últimas 24 h: o token do aviso cadastrado no Asaas não é o do sistema. Conecte de novo na aba Conexão; se o aviso foi cadastrado à mão, troque nele o token pelo novo.": { es: "{n} aviso de Asaas rechazado en las últimas 24 h: el token del aviso registrado en Asaas no es el del sistema. Conecta de nuevo en la pestaña Conexión; si el aviso se registró a mano, cambia en él el token por el nuevo." },
+  "{n} avisos do Asaas recusados nas últimas 24 h: o token do aviso cadastrado no Asaas não é o do sistema. Conecte de novo na aba Conexão; se o aviso foi cadastrado à mão, troque nele o token pelo novo.": { es: "{n} avisos de Asaas rechazados en las últimas 24 h: el token del aviso registrado en Asaas no es el del sistema. Conecta de nuevo en la pestaña Conexión; si el aviso se registró a mano, cambia en él el token por el nuevo." },
   "A conta do ChatGPT não se cadastra colando uma chave: ela se conecta pelo botão de login em IA › Credenciais.": { es: "La cuenta de ChatGPT no se registra pegando una clave: se conecta con el botón de inicio de sesión en IA › Credenciales." },
 
   // ─── #2387, ação em lote de pausa/retomada — Central de Conexões ─────────
@@ -15222,6 +15398,62 @@ export const DICIONARIO: Traducoes = {
   "Máximo de {n} caracteres.": { es: "Máximo de {n} caracteres." },
   "Salvar alíneas": { es: "Guardar las letras" },
   "Alíneas do art. 15.º salvas.": { es: "Las letras del art. 15.º quedaron guardadas." },
+  // ─── Janela de manutenção de conexões (#2388) ─────────────────────────────
+  "Agendar pausa": { es: "Programar pausa" },
+  "Janela de manutenção": { es: "Ventana de mantenimiento" },
+  "A pausa e a retomada acontecem sozinhas no horário marcado. A mensagem que chegar durante a pausa fica gravada e volta na retomada.": {
+    es: "La pausa y la reanudación ocurren solas a la hora marcada. El mensaje que llegue durante la pausa queda grabado y vuelve al reanudar.",
+  },
+  "A pausa começa (hora local)": { es: "La pausa empieza (hora local)" },
+  "A pausa termina (hora local)": { es: "La pausa termina (hora local)" },
+  "Fuso da organização": { es: "Zona horaria de la organización" },
+  "Sem o fuso da organização não dá para agendar: a janela seria gravada com a hora errada.": {
+    es: "Sin la zona horaria de la organización no se puede agendar: la ventana se grabaría con la hora equivocada.",
+  },
+  "Para todas as conexões": { es: "Para todas las conexiones" },
+  "Janelas agendadas": { es: "Ventanas programadas" },
+  "Cancelar janela": { es: "Cancelar ventana" },
+  "Agendando…": { es: "Programando…" },
+  "Informe os dois horários da janela.": { es: "Indique las dos horas de la ventana." },
+  "O fim precisa ser depois do início.": { es: "El fin tiene que ser después del inicio." },
+  "Janela agendada: a pausa e a retomada acontecem sozinhas.": {
+    es: "Ventana programada: la pausa y la reanudación ocurren solas.",
+  },
+  "Não foi possível agendar a janela.": { es: "No se pudo programar la ventana." },
+  "Janela cancelada. O que ela já pausou continua pausado.": {
+    es: "Ventana cancelada. Lo que ya pausó sigue pausado.",
+  },
+  "Não foi possível cancelar a janela.": { es: "No se pudo cancelar la ventana." },
+  // #2498 — busca dentro do seletor de etiquetas do Inbox.
+  "Buscar etiqueta": { es: "Buscar etiquetas" },
+  "Nenhuma etiqueta com esse texto": { es: "Ninguna etiqueta con ese texto" },
+  // #2498 — destino opcional da ação add_tag, no editor de automações.
+  "Destino da etiqueta": { es: "Destino de la etiqueta" },
+  "Card (comportamento atual)": { es: "Card (comportamiento actual)" },
+  "Contato do lead": { es: "Contacto del lead" },
+  "Sem contato vinculado, a etiqueta não é aplicada.": {
+    es: "Sin contacto vinculado, la etiqueta no se aplica.",
+  },
+  // #2744 — compositor: template escolhido sem nome para interpolar.
+  "Contato sem nome no CRM: {{nome}}/{{primeiro_nome}} ficaram literais no texto. Edite antes de enviar.": {
+    es: "Contacto sin nombre en el CRM: {{nome}}/{{primeiro_nome}} quedaron como texto literal en el mensaje. Edítalo antes de enviar.",
+  },
+  // #2770 — a visão Calendário do funil, ao lado do quadro.
+  "Quadro": { es: "Tablero" },
+  "Semana": { es: "Semana" },
+  "Semana anterior": { es: "Semana anterior" },
+  "Próxima semana": { es: "Próxima semana" },
+  "Campo de data final": { es: "Campo de fecha final" },
+  "Sem intervalo": { es: "Sin intervalo" },
+  "Este funil não tem campo de data para montar o calendário.": {
+    es: "Este embudo no tiene campo de fecha con el cual armar el calendario.",
+  },
+  "Nenhum negócio com este campo de data.": {
+    es: "Ningún negocio con este campo de fecha.",
+  },
+  "Nenhum negócio com este campo de data neste período.": {
+    es: "Ningún negocio con este campo de fecha en este período.",
+  },
 };
 
 /**
