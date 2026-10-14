@@ -19,14 +19,14 @@ scripts/perfil-enxuto.sh <id_da_organizacao> <montagem|cliente>
 Ele escreve `organizations.interface_settings` com
 `{"preset":"completa","destinos":[…]}`. Isso é **apresentação**, nunca
 autorização — está no cabeçalho do módulo que lê o valor
-(`lib/navigation/interface.ts:1`: *"Apresentação por vínculo. Nunca é
-autorização de página, API ou ação"*).
+(`lib/navigation/interface.ts:1`: _"Apresentação por vínculo. Nunca é
+autorização de página, API ou ação"_).
 
-| o que muda | o que **não** muda |
-|---|---|
-| menu lateral, hubs ("Ver tudo em…") e busca ⌘K | papel, RLS, permissões |
-| o que a pessoa **descobre** sozinha | o que a pessoa **alcança** |
-| por organização | por instalação (nada global) |
+| o que muda                                     | o que **não** muda           |
+| ---------------------------------------------- | ---------------------------- |
+| menu lateral, hubs ("Ver tudo em…") e busca ⌘K | papel, RLS, permissões       |
+| o que a pessoa **descobre** sozinha            | o que a pessoa **alcança**   |
+| por organização                                | por instalação (nada global) |
 
 Link de conversa, aviso da Central e URL digitada continuam abrindo o que o
 papel autoriza, mesmo para um destino escondido. Desmarcar uma área **não**
@@ -51,9 +51,9 @@ reabre nada para essa pessoa.
 
 ## Portas que o script não consegue esconder
 
-| porta | por quê |
-|---|---|
-| Perfil, Segurança | pessoais, de todo vínculo |
+| porta               | por quê                            |
+| ------------------- | ---------------------------------- |
+| Perfil, Segurança   | pessoais, de todo vínculo          |
 | Equipe, Organização | é por elas que se desfaz a escolha |
 
 `PORTAS_ESSENCIAIS` — `lib/navigation/interface.ts:39-44`. Sem isso, uma
@@ -62,10 +62,10 @@ caminho de volta seria só por banco.
 
 ## Os dois perfis
 
-| perfil | para quem | destinos no script |
-|---|---|---|
+| perfil     | para quem             | destinos no script                  |
+| ---------- | --------------------- | ----------------------------------- |
 | `montagem` | quem está implantando | `cliente` + 6 telas de configuração |
-| `cliente` | o cliente final | o uso diário |
+| `cliente`  | o cliente final       | o uso diário                        |
 
 O `montagem` acrescenta Tipos de agendamento, Etapas do funil, Credenciais de
 IA, Alertas, Aviso no WhatsApp e Notificações. A ordem de uso é
@@ -82,16 +82,16 @@ sed -n '/^BASE=/,/^SETUP=/p' scripts/perfil-enxuto.sh
 Medido com o código real (`sidebarGroups` / `searchable`, módulos e capacidades
 vazios), em 2026-10-14:
 
-| perfil | papel | itens no menu | hubs | destinos no ⌘K |
-|---|---|---|---|---|
-| `cliente` | admin | 9 | 4 | 15 |
-| `cliente` | manager | 8 | 4 | 11 |
-| `cliente` | agent | 6 | 4 | 8 |
-| `cliente` | viewer | 5 | 3 | 7 |
-| `montagem` | admin | 9 | 4 | 21 |
-| `montagem` | manager | 8 | 4 | 16 |
-| `montagem` | agent | 6 | 4 | 11 |
-| `montagem` | viewer | 5 | 4 | 10 |
+| perfil     | papel   | itens no menu | hubs | destinos no ⌘K |
+| ---------- | ------- | ------------- | ---- | -------------- |
+| `cliente`  | admin   | 9             | 4    | 15             |
+| `cliente`  | manager | 8             | 4    | 11             |
+| `cliente`  | agent   | 6             | 4    | 8              |
+| `cliente`  | viewer  | 5             | 3    | 7              |
+| `montagem` | admin   | 9             | 4    | 21             |
+| `montagem` | manager | 8             | 4    | 16             |
+| `montagem` | agent   | 6             | 4    | 11             |
+| `montagem` | viewer  | 5             | 4    | 10             |
 
 Duas leituras que esses números pedem:
 
@@ -143,6 +143,10 @@ remoto, e o single-server usa os contêineres de `.runtime/supabase/`. Rodar o
 script lá, como está, falha no `docker exec` — não grava nada errado, mas
 também não grava nada.
 
+**Pendência do fork:** adaptar o script para o caminho de banco usado na VPS e
+provar esse fluxo. Até essa medição existir, este documento não afirma que o
+script funciona em produção.
+
 Na VPS, o caminho é o `psql` com a connection string (a mesma que o `install.sh`
 usa), ou a tela:
 
@@ -170,16 +174,16 @@ update public.organizations
 
 ## Dois comportamentos a saber antes de usar em cliente
 
-| comportamento | onde | consequência |
-|---|---|---|
-| **Falha ABERTA na atualização.** Se uma versão futura renomear ou remover um destino, os ids desconhecidos são descartados; se **todos** caírem, o schema recusa a lista vazia e a leitura volta à interface **completa** | `lib/navigation/interface.ts:94-105` e `:200-204` | o menu pode voltar inteiro depois de um `update.sh`. Confira a tela do cliente depois de atualizar |
-| **A tela de fim do onboarding não respeita a escolha.** `oQueMaisExiste()` não recebe papel nem settings e mostra 7 destinos curados (Inbox, Funis, Follow-ups, Radar, Alertas, Aviso no WhatsApp, Propostas da IA) | `lib/onboarding/o-que-mais-existe.ts:159`; consumidor em `app/onboarding/done/page.tsx:39` | vazamento de uma vez só, logo depois do wizard |
+| comportamento                                                                                                                                                                                                             | onde                                                                                       | consequência                                                                                       |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| **Falha ABERTA na atualização.** Se uma versão futura renomear ou remover um destino, os ids desconhecidos são descartados; se **todos** caírem, o schema recusa a lista vazia e a leitura volta à interface **completa** | `lib/navigation/interface.ts:94-105` e `:200-204`                                          | o menu pode voltar inteiro depois de um `update.sh`. Confira a tela do cliente depois de atualizar |
+| **A tela de fim do onboarding não respeita a escolha.** `oQueMaisExiste()` não recebe papel nem settings e mostra 7 destinos curados (Inbox, Funis, Follow-ups, Radar, Alertas, Aviso no WhatsApp, Propostas da IA)       | `lib/onboarding/o-que-mais-existe.ts:159`; consumidor em `app/onboarding/done/page.tsx:39` | vazamento de uma vez só, logo depois do wizard                                                     |
 
 ## O que o script **não** resolve
 
-| pedido | estado | onde fica |
-|---|---|---|
-| esconder o link "Ver tudo em CRM/IA/Análise" | não dá por configuração | `NAV_GROUPS` em `lib/navigation/catalogo.ts:89-100`; só por código |
-| esconder abas do editor do agente | não dá | as 6 abas são incondicionais, `app/app/ai/agents/[id]/_components/AgentTabs.tsx:59-68` |
-| perfil por nicho que aplique funil + agente + menu juntos | não existe | o que existe por nicho: `lib/onboarding/pacotes-de-funil.ts` (só etapas do funil) e `lib/followup/modelos/` |
-| renomear itens do menu pelo vocabulário do funil | não alcança o menu | `crm_pipelines.vocabulary` muda rótulos **dentro** do funil (4 chaves: `lead`, `deal`, `won`, `lost` — `lib/schemas/settings.ts:217-224`) |
+| pedido                                                    | estado                  | onde fica                                                                                                                                 |
+| --------------------------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| esconder o link "Ver tudo em CRM/IA/Análise"              | não dá por configuração | `NAV_GROUPS` em `lib/navigation/catalogo.ts:89-100`; só por código                                                                        |
+| esconder abas do editor do agente                         | não dá                  | as 6 abas são incondicionais, `app/app/ai/agents/[id]/_components/AgentTabs.tsx:59-68`                                                    |
+| perfil por nicho que aplique funil + agente + menu juntos | não existe              | o que existe por nicho: `lib/onboarding/pacotes-de-funil.ts` (só etapas do funil) e `lib/followup/modelos/`                               |
+| renomear itens do menu pelo vocabulário do funil          | não alcança o menu      | `crm_pipelines.vocabulary` muda rótulos **dentro** do funil (4 chaves: `lead`, `deal`, `won`, `lost` — `lib/schemas/settings.ts:217-224`) |
