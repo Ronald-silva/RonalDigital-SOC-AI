@@ -1,0 +1,7 @@
+---
+impacto: capacidade_nova
+secao: adicionado
+titulo: Script para deixar o menu enxuto numa organização, sem mexer em código
+---
+
+Entregar o CRM para um cliente de nicho (clínica, concessionária) significava entregar o menu inteiro: 65 destinos, dos quais a maioria não serve àquele negócio. Dava para enxugar pela tela, em Configurações › Organização › Menu lateral, marcando área por área — mas isso é um trabalho manual por cliente, e repetido a cada instalação. Agora `scripts/perfil-enxuto.sh <id_da_organizacao> <montagem|cliente>` grava a escolha de uma vez. O perfil `cliente` deixa o que se usa todo dia (conversas, agenda, funis, contatos, agentes, follow-ups, conhecimento, casos, conexões, desempenho e marca); o perfil `montagem` acrescenta as seis telas de que quem implanta precisa durante a configuração (tipos de agendamento, etapas do funil, credenciais de IA, alertas, aviso no WhatsApp e notificações), para depois ser trocado por `cliente`. Nada é removido nem desligado: isto é apresentação, e papel, RLS e permissões continuam decidindo o que cada pessoa alcança — link de conversa, aviso e busca seguem abrindo o que o papel autoriza. As telas de Perfil, Segurança, Equipe e Organização nunca somem, porque é por elas que se desfaz a escolha. A gravação sobrevive à atualização: ela é um valor na coluna `interface_settings` da organização, e o `baseline.sql` que o `update.sh` reaplica só cria a coluna, nunca reescreve o valor. Quem não rodar o script não vê diferença nenhuma, e desfazer é desmarcar pela mesma tela.
