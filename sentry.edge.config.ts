@@ -11,7 +11,10 @@ Sentry.init({
   dsn: sentryDsn,
 
   // No Sentry da comunidade, só erro (issue #100). Ver isCommunityDsn().
-  tracesSampleRate: isCommunityDsn(sentryDsn) ? 0 : 1,
+  // Fora dela: 5%, decisão da RonalDigital em 2026-10-18 (P0-3). 100% de trace num
+  // CRM com cron de minuto é o maior multiplicador de cota do Sentry, e 5% já
+  // dimensiona latência. O zero da comunidade não muda — a política de lá é dela.
+  tracesSampleRate: isCommunityDsn(sentryDsn) ? 0 : 0.05,
 
   // Coleta restrita + scrub, num ponto só (Sentry 11 coleta amplo por default).
   ...opcoesDePrivacidade,

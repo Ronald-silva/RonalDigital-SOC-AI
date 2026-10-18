@@ -30,13 +30,26 @@ Sentry.init({
   ],
 
   // No Sentry da comunidade, só erro (issue #100): sem trace, sem replay de
-  // sessão e sem sessão de release health (ver integracoesDoCliente). O replay DE
-  // ERRO continua, porque é o que explica o stack trace — e o replayIntegration()
-  // mantém os defaults maskAllText/blockAllMedia.
-  tracesSampleRate: community ? 0 : 1,
+  // sessão e sem sessão de release health (ver integracoesDoCliente).
+  //
+  // Fora dela, decisão da RonalDigital em 2026-10-18 (P0-3):
+  //  - trace a 5% — 100% num CRM com cron de minuto é o maior multiplicador de
+  //    cota do Sentry, e 5% já dimensiona latência;
+  //  - replay de sessão E de erro em ZERO. O replay grava a tela do CRM, que
+  //    exibe conversa, nome e telefone de cliente. O `replayIntegration()` mantém
+  //    maskAllText/blockAllMedia e `integracoesDeReplay` não grava página com
+  //    credencial na URL, mas máscara não é ausência de gravação: num produto que
+  //    processa dado de terceiro, a gravação entra só com decisão explícita de
+  //    quem responde pelo dado. Era o único envio que acontecia INCLUSIVE no DSN
+  //    da comunidade (a taxa de erro era 1.0 sem condição); agora não acontece
+  //    em lugar nenhum.
+  //
+  // A integração segue carregada (0 não a remove): desligar a CAPTURA é o que foi
+  // pedido, e tirar a integração mudaria o bundle do cliente sem necessidade.
+  tracesSampleRate: community ? 0 : 0.05,
 
-  replaysSessionSampleRate: community ? 0 : 0.1,
-  replaysOnErrorSampleRate: 1.0,
+  replaysSessionSampleRate: 0,
+  replaysOnErrorSampleRate: 0,
 
   // Coleta restrita + scrub, num ponto só (Sentry 11 coleta amplo por default).
   ...opcoesDePrivacidade,
