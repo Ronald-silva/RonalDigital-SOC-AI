@@ -65,6 +65,7 @@ git diff --stat upstream/main...main
 | [`docs/fork/perfil-enxuto.md`](docs/fork/perfil-enxuto.md)             | o script de menu enxuto: o que grava, o que não esconde, limitação do `DB_CONTAINER`, como desfazer                                                                     |
 | [`docs/fork/implantacao-cliente.md`](docs/fork/implantacao-cliente.md) | checklist de 10 itens para implantar um cliente novo, com estado medido, não medido e pendências explícitas                                                             |
 | [`RELATORIO-AUDITORIA-OPENCODE.md`](RELATORIO-AUDITORIA-OPENCODE.md)   | auditoria de 2026-10-13 — o que bloqueia vender uma instalação de referência. **Retrato datado**; dois itens dela já foram corrigidos (ver a errata no topo do arquivo) |
+| [`docs/fork/base-de-conhecimento-chatgpt.md`](docs/fork/base-de-conhecimento-chatgpt.md) | resumo autocontido do produto, da implantação e dos limites conhecidos, escrito para ser carregado numa base de conhecimento externa — sem identificadores nem valores sensíveis |
 
 ## 4. Achados medidos em 2026-10-14 que vale guardar
 
@@ -113,6 +114,9 @@ da instalação:
 | Configurações › Atendimento | silêncio da IA depois de resposta pelo celular em **15 min**                                                                                    |
 | processo do worker          | `DEEPSEEK_THINKING=disabled` no `.env.local`; é knob por processo, não por agente nem por organização, e continua sem entrada no `.env.example` |
 | tipo de agendamento         | local configurado como **Link de vídeo**                                                                                                        |
+| Uso de IA › Orçamento       | teto mensal **US$ 50,00**, aviso em **80%**, modo **"Parar a IA ao chegar no limite"**, carência de 72 h (ver seção 5)                          |
+| `settings.llm` da org       | `default_model` e `enabled_models` fixados no modelo que o motor sabe custear (ver seção 5)                                                     |
+| processo do worker          | `FLYWHEEL_INTERVAL_MS=0` no `.env.local` — desliga o laço periódico do flywheel, nada mais                                                      |
 
 O knob deixou de ser apenas hipótese neste fork. A forma aplicada foi:
 
@@ -152,9 +156,90 @@ SLA para outro modelo, carga ou prompt.
 2. Provar entrada e tratamento de imagem e áudio.
 3. Configurar e provar o embedding da base de conhecimento.
 4. Ajustar `scripts/perfil-enxuto.sh` para uso em VPS; hoje o padrão do script
-   ainda aponta para o contêiner do ambiente local.
+   ainda aponta para o contêiner do ambiente local. **Segundo defeito medido em
+   2026-10-18:** nem `BASE` nem `SETUP` do script incluem `/app/ai/usage`, então
+   a organização que recebe o perfil perde a porta da tela de orçamento — ela
+   desaparece do menu, do hub e do ⌘K, e só se chega digitando a URL (ver
+   seção 5).
 
-## 5. O que NÃO foi medido
+## 5. Proteção financeira da IA (P0-2) — 2026-10-17 e 2026-10-18
+
+Trabalho de configuração e medição, **sem uma linha de código**: o que mudou
+foram duas linhas de banco e um knob de `.env.local`. Nada entra na tabela de
+entregas da seção 2, e nada foi para o upstream.
+
+### O que estava errado
+
+| achado                                                                                                                                     | como foi medido                                                                        |
+| ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| Nenhuma das 14 organizações tinha teto aplicado — todas em `enforcement_mode` `off` ou `avisar`                                             | `select enforcement_mode, count(*) from ai_budgets group by 1`                          |
+| A tela de orçamento existia e era inalcançável por clique: a lista `destinos` de `organizations.interface_settings` não inclui `/app/ai/usage` | projeção real de `destinosDaInterface`/`sidebarGroups`/`hubSections`/`searchable`      |
+| `settings.llm.default_model` era `deepseek-flash`, o único modelo em uso **sem tarifa** no mapa do motor                                    | `precoDoModelo('deepseek-flash')` → `undefined`                                        |
+| O flywheel era o único consumidor desse padrão e gravava `cost_cents` nulo                                                                  | `llm_calls` com `origem_da_escolha = 'padrao_da_organizacao'`                            |
+| O classificador de clima **também** cai no padrão da organização                                                                            | `resolverModeloDoPonto('sentiment_classify', …, { naFaltaUsarOPadraoDaOrganizacao: true })` |
+
+### O que foi aplicado
+
+| alteração                                                                                 | onde                                     | reversão                                    |
+| ----------------------------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------- |
+| `enforcement_mode` `off → avisar → bloquear` pela escada oficial da tela, carência de 72 h | `ai_budgets` da org de referência        | marcar "Só acompanhar" e salvar             |
+| `default_model` e `enabled_models` fixados em `deepseek-v4-pro`                           | `organizations.settings.llm`, uma org só | restaurar o jsonb anterior                  |
+| `FLYWHEEL_INTERVAL_MS=0`                                                                  | `.env.local`, worker recriado sem rebuild | remover a linha e recriar o worker          |
+
+A escada é validada no servidor: `off → bloquear` num único salvamento é 422
+`invalid_state_transition`. Armar grava `enforcement_effective_at = now() + 72 h`
+salvo `confirmar_imediato`. Quem arma deixa `ai.budget_enforcement_armed` em
+`api_audit_log`, com ator e antes/depois.
+
+### O que ficou provado
+
+| propriedade                                                             | prova                                                                                     |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| O teto é avaliado **antes** de sair byte ao provedor                     | gate em `run-model-call.ts:858`, `generateText` em `:871`                                 |
+| BYOK (chave da própria organização) respeita o teto **da organização**   | caso novo escrito nesta sessão: chave própria com teto estourado é bloqueada, zero token  |
+| Organizações têm orçamentos independentes                                | caso novo: A estourada bloqueia, B no mesmo processo segue; todo statement filtra por `$1` |
+| Bloqueio não vira silêncio para o cliente                               | 31 casos existentes: aviso ao lead + fila humana + item na Central                        |
+| A carência é respeitada e o bloqueio é alcançável                        | `decidirOrcamento` executada com o estado real em 7 cenários                              |
+| `enabled_models` não alcança o clima nem o embedding                     | o clima não usa o seam; o embedding é isento por contrato (`embed.ts`)                    |
+| `FLYWHEEL_INTERVAL_MS` desliga **só** o flywheel                         | a variável é lida em 2 pontos, ambos do mesmo laço; os outros 7 laços não a referenciam    |
+
+Suíte relacionada: 231 casos, exit 0.
+
+### Limitações que esta frente mediu e NÃO resolveu
+
+Nenhuma bloqueia a operação com um único modelo permitido, flywheel desligado,
+nenhum token MCP ativo e nenhum campo personalizado — que é o estado atual.
+
+1. **O mapa de preços do motor cobre uma fração do catálogo.** Dos modelos que
+   `ai_models` oferece na tela, a maioria não resolve tarifa em
+   `lib/agent-engine/edge/llm/pricing.ts`, e o gasto deles sai `cost_cents` nulo
+   — o teto não os vê. Para remedir:
+   `python3` comparando as chaves de `USD_PER_MTOK` com `select model from ai_pricing`.
+2. **`cost_budget_cents` e `token_budget` não são lidos pelo motor vivo.**
+   `lib/agent-engine/agent/agent-config.ts` mapeia só `max_steps`; os dois tetos
+   por execução só são impostos em `lib/ai/runtime/agent.ts` (runtime legado), e
+   lá o teste é **posterior** à chamada. O único limite que a prévia respeita é
+   `max_steps`, que não é limite de dinheiro.
+3. **Não há limite de concorrência comprovado nas rotas HTTP de IA.**
+   `QUEUE_MAX_CONCURRENCY` (default 8) é cap **global** da fila; rota HTTP que
+   chama modelo não passa por ele.
+4. **O gate lê o gasto, não o reserva.** Chamadas simultâneas leem o mesmo
+   snapshot; medido: 10 chamadas logo abaixo do teto passam todas.
+5. **Mapa do motor e `ai_pricing` discordam** em `deepseek-v4-pro` (132/396
+   contra 44/87 cents por Mtok). O motor cobra mais alto — o teto dispara antes
+   do gasto real, mas a tela de Uso mostra acima da fatura do provedor.
+6. **O caminho de voz (`workers/voice-agent/`) não tem gate de orçamento.** Não
+   está implantado nesta instalação, então a exposição hoje é zero.
+
+### Trabalho vizinho em curso, não commitado
+
+O ajuste de Sentry (P0-3) está no diretório de trabalho e **não** foi commitado:
+`instrumentation-client.ts`, `sentry.edge.config.ts`, `sentry.server.config.ts`
+e `workers/agent-worker/main.ts`. A imagem `deskcomm-worker:local` em execução
+já o contém. **Não rode `docker compose up --build`** enquanto isso estiver
+assim: assaria alterações não commitadas na imagem.
+
+## 6. O que NÃO foi medido
 
 - `inbound_debounce_ms` e `settings.llm.params` da organização em produção.
 - Benchmark com amostra maior, outros modelos, outros prompts ou concorrência;
@@ -165,3 +250,15 @@ SLA para outro modelo, carga ou prompt.
 - A suíte completa (`pnpm test:unit`) nesta árvore. O que o `CLAUDE.md` exige
   antes de abrir PR continua valendo: a suíte inteira, sem caminho, e o rodapé
   comparado com o `grep FAIL` e com o exit code.
+- **`cost_cents` preenchido numa chamada posterior à correção de 2026-10-18.**
+  A correção está provada no resolvedor de modelo e no mapa de preços; a coluna
+  em si não foi observada porque nenhuma chamada de modelo ocorreu depois dela.
+  Fecha-se com o primeiro turno real, ou com uma prévia do agente — que custa
+  4 chamadas pagas, não uma (medido: `jailbreak_detect`, `stage_classifier`,
+  `promise_semantic` e `agent_preview`).
+- **O comportamento do bloqueio com o teto de fato estourado nesta instalação.**
+  O gasto do mês está em ~2% do teto; o veredito de bloqueio foi exercitado pela
+  função pura e pelos testes, nunca por gasto real.
+- **O efeito do novo `default_model` no custo do classificador de clima.** Ele
+  deixou de usar `deepseek-flash` e passou a usar `deepseek-v4-pro`, que é mais
+  caro por token; o impacto real depende de tráfego que ainda não houve.
